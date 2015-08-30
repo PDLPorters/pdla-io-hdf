@@ -9,33 +9,11 @@
 #
 use strict;
 use PDLA;
-use Test::More;
-
-BEGIN
-{
-    use PDLA::Config;
-    if ( $PDLA::Config{WITH_HDF} ) 
-    {
-        eval( " use PDLA::IO::HDF; " );
-        if( $@ )
-        {
-            plan skip_all => "PDLA::IO::HDF module compiled, but not available.";
-        }  
-        else
-        {
-            plan tests => 10;
-        }
-    }
-    else
-    {
-        plan skip_all => "PDLA::IO::HDF module not compiled.";
-    }
-}
-
+use PDLA::IO::HDF;
 use PDLA::IO::HDF::VS;
-
-use PDLA::Config;
+use Test::More tests => 10;
 use File::Temp qw(tempdir);
+
 my $tmpdir = tempdir( CLEANUP => 1 );
 
 my $testfile = "$tmpdir/vgroup.hdf";

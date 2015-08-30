@@ -9,28 +9,10 @@
 #
 use strict;
 use PDLA;
-use Test::More;
-
-BEGIN
-{    
-    use PDLA::Config;
-    if ( $PDLA::Config{WITH_HDF} ) 
-    {
-        eval( " use PDLA::IO::HDF; " );
-        if( $@ )
-        {
-            plan skip_all => "PDLA::IO::HDF module compiled, but not available.";
-        }  
-        else
-        {
-            plan tests => 21;
-        }
-    }
-    else
-    {
-        plan skip_all => "PDLA::IO::HDF module not compiled.";
-    }
-}
+use PDLA::IO::HDF;
+use PDLA::IO::HDF::VS;
+use Test::More tests => 21;
+use File::Temp qw(tempdir);
 
 sub tapprox
 {
@@ -41,12 +23,7 @@ sub tapprox
     return all($d < 1.0e-5);
 }
 
-use PDLA::IO::HDF;
-use PDLA::IO::HDF::VS;
-
 # Vdata test suite
-use PDLA::Config;
-use File::Temp qw(tempdir);
 my $tmpdir = tempdir( CLEANUP => 1 );
 
 my $testfile = "$tmpdir/vdata.hdf";

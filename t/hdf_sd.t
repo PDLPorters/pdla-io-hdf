@@ -9,29 +9,10 @@
 #
 use strict;
 use PDLA;
-use Test::More;
+use Test::More tests => 37;
 use File::Temp qw(tempdir);
 
-BEGIN
-{
-    use PDLA::Config;
-    if ( $PDLA::Config{WITH_HDF} ) 
-    {
-        eval( " use PDLA::IO::HDF; " );
-        if( $@ )
-        {
-            plan skip_all => "PDLA::IO::HDF module compiled, but not available.";
-        }  
-        else
-        {
-            plan tests => 36;
-        }
-    }
-    else
-    {
-        plan skip_all => "PDLA::IO::HDF module not compiled.";
-    }
-}
+use_ok("PDLA::IO::HDF");
 
 use ExtUtils::testlib;
 

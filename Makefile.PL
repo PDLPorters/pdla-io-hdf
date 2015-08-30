@@ -1,21 +1,26 @@
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
-use ExtUtils::Depends;
-use PDLA::Core::Dev;
 
 my $thispackage = q(PDLA::IO::HDF);
-my $pkg = ExtUtils::Depends->new($thispackage, qw(Alien::HDF4));
-$pkg->set_inc(PDLA_INCLUDE());
-$pkg->add_typemaps(PDLA_TYPEMAP());
-$pkg->add_pm(
-    'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',
-);
+
+my %pkghash;
+# so can output its deps at least
+eval {
+  require ExtUtils::Depends;
+  my $pkg = ExtUtils::Depends->new($thispackage, qw(Alien::HDF4));
+  $pkg->set_inc(PDLA_INCLUDE());
+  $pkg->add_typemaps(PDLA_TYPEMAP());
+  $pkg->add_pm(
+      'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',
+  );
+  %pkghash = $pkg->get_makefile_vars;
+};
 
 WriteMakefile(
     NAME => $thispackage,
     VERSION_FROM => 'HDF.pm',
-    $pkg->get_makefile_vars,
+    %pkghash,
     'META_MERGE' => {
         "meta-spec" => { version => 2 },
         resources => {

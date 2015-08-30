@@ -2,54 +2,42 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 use ExtUtils::Depends;
+use PDLA::Core::Dev;
 
-my $msg = "";
-my $forcebuild=0;  # Note: forcebuild not used
-
-if (defined $PDLA::Config{WITH_HDF} && $PDLA::Config{WITH_HDF}==0) {
-    $msg = "Will skip build of PDLA::IO::HDF on this system\n";
-    goto skip;
-}
-
-if (defined $PDLA::Config{WITH_HDF} && $PDLA::Config{WITH_HDF}==1) {
-    print "Will forcibly try and build PDLA::IO::HDF on this system\n";
-    $forcebuild=1;
-}
-
-# Make sure everything we wanted is found:
-my $donot = 1;
-if( eval { ExtUtils::Depends->new(qw(PDLA::IO::HDF4 Alien::HDF4)) } ) {
-    $donot = 0;
-} else {
-    $msg .= "Error loading Alien::HDF4: '$@'\n";
-}
-
-if ( $donot ) {
-    $msg .= "Skipping build of PDLA::IO::HDF.\n";
-}
-
-skip:
-
-if ($msg ne "" && $forcebuild==0) {
-    write_dummy_make( $msg );
-    $donot = 1;
-    $PDLA::Config{WITH_HDF}=0;
-} else {
-    $PDLA::Config{WITH_HDF}=1;
-    print "Building PDLA::IO::HDF. Turn off WITH_HDF if there are any problems\n";
-}
-
-return if $donot;
+my $thispackage = q(PDLA::IO::HDF);
+my $pkg = ExtUtils::Depends->new($thispackage, qw(Alien::HDF4));
+$pkg->set_inc(PDLA_INCLUDE());
+$pkg->add_typemaps(PDLA_TYPEMAP());
+$pkg->add_pm(
+    'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',
+);
 
 WriteMakefile(
-    NAME => 'PDLA::IO::HDF',
+    NAME => $thispackage,
     VERSION_FROM => 'HDF.pm',
-    PM => {
-        'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',
+    $pkg->get_makefile_vars,
+    'META_MERGE' => {
+        "meta-spec" => { version => 2 },
+        resources => {
+            homepage => 'http://pdlporters.github.io',
+            repository  => {
+                url => 'git://github.com/PDLPorters/pdla-io-hdf',
+                type => 'git',
+                web => 'https://github.com/PDLPorters/pdla-io-hdf',
+            },
+        },
     },
-    dist => {
-        COMPRESS => 'gzip',
-        SUFFIX => 'gz',
+    'CONFIGURE_REQUIRES' => {
+      'ExtUtils::MakeMaker' => 0,
+      'ExtUtils::Depends' => '0.402',
+      'Alien::HDF4' => 0,
+      'PDLA::Core' => 0,
     },
-    (eval ($ExtUtils::MakeMaker::VERSION) >= 6.57_02 ? ('NO_MYMETA' => 1) : ()),
+    'BUILD_REQUIRES' => {
+      'PDLA::Core' => 0,
+    },
+    'TEST_REQUIRES' => {
+      'PDLA::Core' => 0,
+      'Test::More' => 0,
+    },
 );

@@ -27,6 +27,7 @@ WriteMakefile(
         "meta-spec" => { version => 2 },
         resources => {
             homepage => 'http://pdlporters.github.io',
+            bugtracker  => {web=>'https://github.com/PDLPorters/pdla-io-hdf/issues'},
             repository  => {
                 url => 'git://github.com/PDLPorters/pdla-io-hdf',
                 type => 'git',

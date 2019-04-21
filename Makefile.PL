@@ -43,4 +43,5 @@ WriteMakefile(
     'TEST_REQUIRES' => {
       'Test::More' => 0,
     },
+    clean => { FILES => '_Inline' },
 );

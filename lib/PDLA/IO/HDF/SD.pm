@@ -1,4 +1,4 @@
-pp_addpm({At => Top}, <<'EOD');
+package PDLA::IO::HDF::SD;
 
 =head1 NAME
 
@@ -101,6 +101,14 @@ interchangeably.
 use PDLA;
 
 require POSIX;
+
+use FindBin;
+use Alien::HDF4::Install::Files;
+use Inline Pdlapp => 'DATA', name => __PACKAGE__,
+  %{ Alien::HDF4::Install::Files->Inline('C') }, # EUD returns empty if !"C"
+  # relative to t/ !
+  typemaps => "$FindBin::Bin/../typemap.hdf",
+  ;
 
 sub _pkg_name
     { return "PDLA::IO::HDF::SD::" . shift() . "()"; }
@@ -1345,7 +1353,11 @@ perl(1), PDLA(1), PDLA::IO::HDF(1).
 
 =cut
 
-EOD
+1;
+
+__DATA__
+
+__Pdlapp__
 
 pp_addhdr(<<'EOH');
 
@@ -1372,7 +1384,7 @@ pp_addhdr(<<'EOH');
 EOH
 
 use FindBin;
-use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../../../../../..";
 require 'buildfunc.noinst';
 
 #-------------------------------------------------------------------------

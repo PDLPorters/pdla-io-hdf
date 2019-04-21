@@ -2,18 +2,16 @@ pp_addpm({At => Top}, <<'EOD');
 
 =head1 NAME 
 
-PDLA::IO::HDF - An interface library for HDF4 files.
+PDLA::IO::HDF::VS - An interface library for HDF4 VS and V files.
 
 =head1 SYNOPSIS
 
   use PDLA;
   use PDLA::IO::HDF::VS;
-        
-   #### no doc for now ####
 
 =head1 DESCRIPTION
 
-This librairy provide functions to manipulate
+This library provide functions to manipulate
 HDF4 files with VS and V interface (reading, writing, ...)
 
 For more information on HDF4, see http://www.hdfgroup.org/products/hdf4/

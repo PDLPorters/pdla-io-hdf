@@ -10,9 +10,6 @@ eval {
   require ExtUtils::Depends;
   my $pkg = ExtUtils::Depends->new($thispackage, qw(PDLA Alien::HDF4));
   $pkg->add_typemaps(PDLA_TYPEMAP());
-  $pkg->add_pm(
-      'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',
-  );
   %pkghash = $pkg->get_makefile_vars;
 };
 
@@ -20,7 +17,7 @@ my @coredep = ('PDLA::Core' => '2.019100');
 
 WriteMakefile(
     NAME => $thispackage,
-    VERSION_FROM => 'HDF.pm',
+    VERSION_FROM => 'lib/PDLA/IO/HDF.pm',
     %pkghash,
     'META_MERGE' => {
         "meta-spec" => { version => 2 },

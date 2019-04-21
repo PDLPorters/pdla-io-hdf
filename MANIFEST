@@ -1,5 +1,4 @@
 Changes
-HDF.pm
 MANIFEST			This list of files
 Makefile.PL
 README.md
@@ -11,6 +10,7 @@ VS/Changes
 VS/Makefile.PL
 VS/VS.pd
 buildfunc.noinst
+lib/PDLA/IO/HDF.pm
 t/00-report-prereqs.t
 t/01-checkmanifest.t
 t/hdf_sd.t

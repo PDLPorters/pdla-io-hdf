@@ -16,5 +16,5 @@ t/01-checkmanifest.t
 t/hdf_sd.t
 t/hdf_vdata.t
 t/hdf_vgroup.t
-typemap
+typemap.hdf
 xt/00-check-changelog.t

@@ -15,6 +15,7 @@ eval {
   $pkg->add_pm(
       'VS.pm' => '$(INST_LIBDIR)/VS.pm',
   );
+  $pkg->add_typemaps('../typemap.hdf');
   %pkghash = $pkg->get_makefile_vars;
 };
 

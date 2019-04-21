@@ -15,6 +15,7 @@ eval {
   $pkg->add_pm(
       'SD.pm' => '$(INST_LIBDIR)/SD.pm',
   );
+  $pkg->add_typemaps('../typemap.hdf');
   %pkghash = $pkg->get_makefile_vars;
 };
 

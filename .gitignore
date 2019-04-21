@@ -2,9 +2,10 @@ SD/SD.bs
 SD/SD.c
 SD/SD.o
 SD/SD.pm
-SD/SD.xs
+SD/SD.xs*
 VS/VS.bs
 VS/VS.c
 VS/VS.o
 VS/VS.pm
-VS/VS.xs
+VS/VS.xs*
+_Inline/

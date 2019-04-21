@@ -1055,7 +1055,7 @@ sub SDget
     my($self, $name, $start, $end, $stride) = @_;
     my $sub = _pkg_name( 'SDget' );
 
-    return null
+    return PDLA::null
         unless defined( $self->{DATASET}->{$name} );
 
     unless( defined( $end ) )
@@ -1085,7 +1085,7 @@ sub SDget
     my $res = _SDreaddata( $self->{DATASET}->{$name}->{SDSID}, $c_start, $c_stride, $c_end, $buff );
     if($res == PDLA::IO::HDF->FAIL)
     {
-        $buff = null;
+        $buff = PDLA::null;
         print "$sub: Error returned from _SDreaddata()!\n";
     }
 

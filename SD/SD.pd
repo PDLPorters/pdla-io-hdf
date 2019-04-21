@@ -1,6 +1,6 @@
 pp_addpm({At => Top}, <<'EOD');
 
-=head1 NAME 
+=head1 NAME
 
 PDLA::IO::HDF::SD - PDLA interface to the HDF4 SD library.
 
@@ -8,8 +8,8 @@ PDLA::IO::HDF::SD - PDLA interface to the HDF4 SD library.
 
   use PDLA;
   use PDLA::IO::HDF::SD;
-  
-  #      
+
+  #
   # Creating and writing an HDF file
   #
 
@@ -19,7 +19,7 @@ PDLA::IO::HDF::SD - PDLA interface to the HDF4 SD library.
   # Define some data
   my $data = sequence(short, 500, 5);
 
-  # Put data in file as 'myData' dataset with the names 
+  # Put data in file as 'myData' dataset with the names
   #    of dimensions ('dim1' and 'dim2')
   $hdf->SDput("myData", $data , ['dim1','dim2']);
 
@@ -76,7 +76,7 @@ PDLA::IO::HDF::SD - PDLA interface to the HDF4 SD library.
 
   # Get the valid range of a dataset:
   my @range = $hdf->SDgetrange("myData");
- 
+
   #Now you can do what you want with your data
   $hdf->close();
 
@@ -88,8 +88,8 @@ HDF4 files with HDF's SD interface.
 
 For more information on HDF4, see http://hdf.ncsa.uiuc.edu/
 
-There have been a lot of changes starting with version 2.0, and these may affect 
-your code. PLEASE see the 'Changes' file for a detailed description of what 
+There have been a lot of changes starting with version 2.0, and these may affect
+your code. PLEASE see the 'Changes' file for a detailed description of what
 has been changed. If your code used to work with the circa 2002 version of this
 module, and does not work anymore, reading the 'Changes' is your best bet.
 
@@ -217,7 +217,7 @@ UnpackSBigEndianPDLA(size, buff, p)
                 int                * data;
 
                 data = p->data;
-        
+
                 for(i=0; i<size; i++)
                 {
                         bch1 = buff[i*2];
@@ -304,12 +304,12 @@ _SDinitchunk(sds_id, type, rank, chunk_lengths);
             HDfreespace( origin );
             RETVAL = status;
         OUTPUT:
-            RETVAL  
-            
-int 
+            RETVAL
+
+int
 Hishdf(filename);
                 char*    filename
-        CODE: 
+        CODE:
             RETVAL = Hishdf(filename);
         OUTPUT:
             RETVAL
@@ -353,7 +353,7 @@ _SDsetattr_values(s_id, name, values, size, type);
                 RETVAL
 
 ENDXS
- 
+
 pp_addpm(<<'EOPM');
 
 use PDLA::Primitive;
@@ -363,7 +363,7 @@ use PDLA::IO::HDF;
 
 require POSIX;
 
-sub _pkg_name 
+sub _pkg_name
     { return "PDLA::IO::HDF::SD::" . shift() . "()"; }
 
 # Convert a byte to a char:
@@ -393,7 +393,7 @@ sub Byte2Char
             if you want to write to it, prepend the name with the '+' character : "+name.hdf"
             if you want to create it, prepend the name with the '-' character : "-name.hdf"
             otherwise the file will be open in read only mode
-    
+
     Returns the hdf object (die on error)
 
 =for example
@@ -408,9 +408,9 @@ sub new
     # General:
     my $type = shift;
     my $filename = shift;
-    
+
     my $sub = _pkg_name( 'new' );
-    
+
     my $debug = 0;
 
     my $self = {};
@@ -428,20 +428,20 @@ sub new
         $self->{ACCESS_MODE} = PDLA::IO::HDF->DFACC_CREATE;
         $self->{SDID} = PDLA::IO::HDF::SD::_SDstart( $filename, $self->{ACCESS_MODE} );
         my $res = PDLA::IO::HDF::SD::_SDend( $self->{SDID} );
-        die "$sub: _ERR::Create\n" 
+        die "$sub: _ERR::Create\n"
             if( ($self->{SDID} == PDLA::IO::HDF->FAIL ) || ( $res == PDLA::IO::HDF->FAIL ));
         $self->{ACCESS_MODE} = PDLA::IO::HDF->DFACC_WRITE + PDLA::IO::HDF->DFACC_READ;
     }
     unless( defined( $self->{ACCESS_MODE} )  )
     {   # Default to Read-only access:
-        $self->{ACCESS_MODE} = PDLA::IO::HDF->DFACC_READ; 
+        $self->{ACCESS_MODE} = PDLA::IO::HDF->DFACC_READ;
     }
     $self->{FILE_NAME} = $filename;
 
     # SD interface:
     print "$sub: Loading HDF File $self->{FILE_NAME}\n"
         if $debug;
-    
+
     $self->{SDID} = PDLA::IO::HDF::SD::_SDstart( $self->{FILE_NAME}, $self->{ACCESS_MODE} );
     die "$sub: _ERR::SDstart\n"
         if( $self->{SDID} == PDLA::IO::HDF->FAIL );
@@ -449,22 +449,22 @@ sub new
     my $num_datasets = -999;
     my $num_global_attrs = -999;
     my $res = _SDfileinfo( $self->{SDID}, $num_datasets, $num_global_attrs );
-    die "$sub: ** sdFileInfo **\n" 
+    die "$sub: ** sdFileInfo **\n"
         if($res == PDLA::IO::HDF->FAIL);
-    
+
     foreach my $i ( 0 .. $num_global_attrs-1 )
     {
         print "$sub: Loading Global Attribute #$i\n"
             if $debug;
-    
+
         my $attrname = " "x(PDLA::IO::HDF->MAX_NC_NAME+1);
         my $type = 0;
         my $count = 0;
-        
+
         $res = _SDattrinfo( $self->{SDID}, $i, $attrname, $type, $count );
         die "$sub: ** sdAttrInfo **\n"
             if($res == PDLA::IO::HDF->FAIL);
-        
+
         print "$sub: \$attrname = \'$attrname\'\n"
             if $debug;
 
@@ -472,9 +472,9 @@ sub new
         $res = _SDreadattr( $self->{SDID}, $i, $self->{GLOBATTR}->{$attrname} );
         die "$sub: ** sdReadAttr **\n"
             if($res == PDLA::IO::HDF->FAIL);
-        
-        if( $type == PDLA::IO::HDF->DFNT_CHAR ) 
-        { 
+
+        if( $type == PDLA::IO::HDF->DFNT_CHAR )
+        {
             $self->{GLOBATTR}->{$attrname} = Byte2Char( $self->{GLOBATTR}->{$attrname} );
         }
     }
@@ -484,7 +484,7 @@ sub new
     {
         print "$sub: Loading SDS #$i\n"
             if $debug;
-    
+
         my $sds_id = _SDselect( $self->{SDID}, $i );
         die "$sub: ** sdSelect **\n"
             if($sds_id == PDLA::IO::HDF->FAIL);
@@ -494,11 +494,11 @@ sub new
         my $dimsize = " "x( (4 * PDLA::IO::HDF->MAX_VAR_DIMS) + 1 );
         my $numtype = 0;
         my $num_attrs = 0;
-        
+
         $res = _SDgetinfo($sds_id, $name, $rank, $dimsize, $numtype, $num_attrs);
         die "$sub: ** sdGetInfo **\n"
             if($res == PDLA::IO::HDF->FAIL);
-            
+
         print "$sub: \$name = \'$name\'\n"
             if $debug;
         print "$sub: \$dimsize = \'$dimsize\'\n"
@@ -507,30 +507,30 @@ sub new
         $self->{DATASET}->{$name}->{TYPE} = $numtype;
         $self->{DATASET}->{$name}->{RANK} = $rank;
         $self->{DATASET}->{$name}->{SDSID} = $sds_id;
-        
+
         # Load up information on the dimensions (named, unlimited, etc...):
         #
         foreach my $j ( 0 .. $self->{DATASET}->{$name}->{RANK}-1 )
         {
             print "$sub: Loading SDS($i) Dimension #$j\n"
                 if $debug;
-                
+
             my $dim_id = _SDgetdimid( $sds_id, $j );
             die "$sub: ** sdGetDimId **\n"
                 if($dim_id == PDLA::IO::HDF->FAIL);
-            
+
             my $dimname = " "x(PDLA::IO::HDF->MAX_NC_NAME+1);
             my $size = 0;
             my $num_type = 0;
             my $num_dim_attrs = 0;
-            
+
             $res = _SDdiminfo( $dim_id, $dimname, $size, $num_type, $num_dim_attrs );
             die "$sub: ** sdDimInfo **\n"
                 if($res == PDLA::IO::HDF->FAIL);
-                
+
             print "$sub: \$dimname = \'$dimname\'\n"
                 if $debug;
-            
+
             $self->{DATASET}->{$name}->{DIMS}->{$j}->{DIMID} = $dim_id;
 	    $self->{DATASET}->{$name}->{DIMS}->{$j}->{SIZE} = $size;
 	    $self->{DATASET}->{$name}->{DIMS}->{$j}->{NAME} = $dimname;
@@ -542,48 +542,48 @@ sub new
 		   $self->{DATASET}->{$name}->{DIMS}->{$j}->{REAL_SIZE} = _SDgetunlimiteddim( $sds_id, $j);
 	    }
         }
-        
+
         # Load up info on the SDS's attributes:
         #
         foreach my $j ( 0 .. $num_attrs-1 )
         {
             print "$sub: Loading SDS($i) Attribute #$j\n"
                 if $debug;
-        
+
             my $attrname = " "x(PDLA::IO::HDF->MAX_NC_NAME+1);
             my $type = 0;
             my $count = 0;
-            
+
             $res = _SDattrinfo( $sds_id, $j, $attrname, $type, $count);
             die "$sub: ** sdAttrInfo **\n"
                 if($res == PDLA::IO::HDF->FAIL);
-            
+
             print "$sub: \$attrname = \'$attrname\'\n"
                 if $debug;
 
-            $self->{DATASET}->{$name}->{ATTRS}->{$attrname} = 
+            $self->{DATASET}->{$name}->{ATTRS}->{$attrname} =
                 zeroes( $PDLA::IO::HDF::SDinvtypeTMAP2->{$type}, $count );
-            
+
             $res = _SDreadattr( $sds_id, $j, $self->{DATASET}->{$name}->{ATTRS}->{$attrname} );
             die "$sub: ** sdReadAttr **\n"
                 if($res == PDLA::IO::HDF->FAIL);
 
             # FIXME: This should be a constant
-            if( $type == PDLA::IO::HDF->DFNT_CHAR ) 
-            { 
-                $self->{DATASET}->{$name}->{ATTRS}->{$attrname} = 
+            if( $type == PDLA::IO::HDF->DFNT_CHAR )
+            {
+                $self->{DATASET}->{$name}->{ATTRS}->{$attrname} =
                     Byte2Char( $self->{DATASET}->{$name}->{ATTRS}->{$attrname} );
             }
         }
     }
 
     bless $self, $type;
-    
+
     # Now that we're blessed, run our own accessors:
-    
+
     # Default to using this (it's a good thing :)
     $self->Chunking( 1 );
-    
+
     return $self;
 } # End of new()...
 
@@ -592,24 +592,24 @@ sub new
 =for ref
 
     Accessor for the chunking mode on this HDF file.
-    
+
     'Chunking' is an internal compression and tiling the HDF library can
         perform on an SDS.
-        
+
     This variable only affects they way SDput() works, and is ON by default.
-    
-    The code modifications enabled by this flag automatically partition the 
+
+    The code modifications enabled by this flag automatically partition the
         dataset to chunks of at least 100x100 values in size. The logic on this
         is pretty fancy, and would take a while to doc out here. If you
         _really_ have to know how it auto-partitions the data, then look at
         the code.
-    
+
     Someday over the rainbow, I'll add some features for better control of the
-        chunking parameters, if the need arises. For now, it's just stupid easy 
+        chunking parameters, if the need arises. For now, it's just stupid easy
         to use.
 
 =for usage
-    
+
     Arguments:
         1 (optional): new value for the chunking flag.
 
@@ -620,7 +620,7 @@ sub new
 
     # Turn the chunking off:
     my $newvar = $hdf->Chunking( 0 );
-    
+
     # Turn the chunking back on:
     my $newvar = $hdf->Chunking( 1 );
 
@@ -678,10 +678,10 @@ sub SDgetvariablename
 =for usage
 
     Arguments:
-        1 (optional) : The name of the SD dataset from which you want to get 
-            the attributes. This arg is optional, and without it, it will 
+        1 (optional) : The name of the SD dataset from which you want to get
+            the attributes. This arg is optional, and without it, it will
             return the list of global attribute names.
-        
+
     Returns a list of names or undef on error.
 
 =for example
@@ -692,7 +692,7 @@ sub SDgetvariablename
     # For SDS attributes :
     my @attrList = $hdf->SDgetattributenames("dataset_name");
 
-=cut 
+=cut
 
 
 sub SDgetattributenames
@@ -704,7 +704,7 @@ sub SDgetattributenames
             unless defined( $self->{DATASET}->{$name} );
         return keys %{ $self->{DATASET}->{$name}->{ATTRS} };
     }
-    else 
+    else
     {
         return keys %{ $self->{GLOBATTR} };
     }
@@ -728,7 +728,7 @@ sub SDgetattributname
         1 : The name of the attribute.
         2 (optional): The name of the SDS from which you want to get the attribute
             value. Without this arg, it returns the global attribute value of that name.
-    
+
     Returns an attribute value or undef on error.
 
 =for example
@@ -751,11 +751,11 @@ sub SDgetattribute
             unless defined( $self->{DATASET}->{$dataset} );
         return $self->{DATASET}->{$dataset}->{ATTRS}->{$name};
     }
-    else 
+    else
     {   # Global attribute:
         return( undef )
             unless defined( $self->{GLOBATTR}->{$name} );
-        return $self->{GLOBATTR}->{$name}; 
+        return $self->{GLOBATTR}->{$name};
     }
 } # End of SDgetattribute()...
 # Wrapper (this is now defunct):
@@ -775,7 +775,7 @@ sub SDgetattribut
 
     Arguments:
         1 : The name of the SDS from which you want to get the fill value.
-    
+
     Returns the fill value or undef on error.
 
 =for example
@@ -803,7 +803,7 @@ sub SDgetfillvalue
 
     Arguments:
         1 : the name of the SDS from which you want to get the valid range.
-    
+
     Returns a list of two elements [min, max] or undef on error.
 
 =for example
@@ -831,7 +831,7 @@ sub SDgetrange
 
     Arguments:
         1 : The name of the SDS from which you want to get the scale factor.
-    
+
     Returns the scale factor or undef on error.
 
 =for example
@@ -846,7 +846,7 @@ sub SDgetscalefactor
     my($self, $name) = @_;
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-    
+
     return ($self->{DATASET}->{$name}->{ATTRS}->{scale_factor})->at(0);
 } # End of SDgetscalefactor()...
 
@@ -860,13 +860,13 @@ sub SDgetscalefactor
 
     Arguments:
         1 : The name of the SDS from which you want to get the dimensions.
-        
+
     Returns an array of n dimensions with their sizes or undef on error.
 
 =for example
 
     my @dim = $hdf->SDgetdimsize("dataset_name");
-        
+
 =cut
 
 
@@ -877,7 +877,7 @@ sub SDgetdimsize
         unless defined( $self->{DATASET}->{$name} );
     my @dims;
     foreach( sort keys %{ $self->{DATASET}->{$name}->{DIMS} } )
-    { 
+    {
         push @dims, $self->{DATASET}->{$name}->{DIMS}->{$_}->{SIZE};
     }
 
@@ -894,7 +894,7 @@ sub SDgetdimsize
 
     Arguments:
         1 : The name of the SDS from which you want to the dimensions.
-    
+
     Returns an array of n dimensions with the dim sizes or undef on error.
 
 =for example
@@ -907,21 +907,21 @@ sub SDgetdimsize
 sub SDgetunlimiteddimsize
 {
     my ($self, $name) = @_;
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-    
+
     my @dim;
     foreach( sort keys %{$self->{DATASET}{$name}{DIMS}} )
     {
         if( $self->{DATASET}->{$name}->{DIMS}->{$_}->{SIZE} == 0 )
         {
-            $dim[ $_ ] = 
+            $dim[ $_ ] =
                 $self->{DATASET}->{$name}->{DIMS}->{$_}->{REAL_SIZE};
         }
         else
         {
-            $dim[ $_ ] = 
+            $dim[ $_ ] =
                 $self->{DATASET}->{$name}->{DIMS}->{$_}->{SIZE};
         }
     }
@@ -944,7 +944,7 @@ sub SDgetdimsizeunlimit
 
     Arguments:
         1 : the name of a dataset you want to get the dimensions'names .
-    
+
     Returns an array of n dimensions with their names or an empty list if error.
 
 =for example
@@ -957,10 +957,10 @@ sub SDgetdimsizeunlimit
 sub SDgetdimnames
 {
     my ($self, $name) = @_;
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-        
+
     my @dims=();
     foreach( sort keys %{ $self->{DATASET}->{$name}->{DIMS} } )
     {
@@ -984,33 +984,33 @@ sub SDgetdimname
 
     Arguments:
         1 : The name of the SDS
-    
+
     Returns (scale factor, scale factor error, offset, offset error, data type), or undef on error.
 
 =for example
 
     my ($cal, $cal_err, $off, $off_err, $d_type) = $hdf->SDgetcal("dataset_name");
 
-=cut 
+=cut
 
 
 sub SDgetcal
 {
     my ($self, $name ) = @_;
-    
+
     my ($cal, $cal_err, $off, $off_err, $type);
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
     return( undef )
         unless defined( $self->{DATASET}->{$name}->{ATTRS}->{scale_factor} );
-    
+
     $cal = $self->{DATASET}->{$name}->{ATTRS}->{scale_factor};
     $cal_err = $self->{DATASET}->{$name}->{ATTRS}->{scale_factor_err};
     $off = $self->{DATASET}->{$name}->{ATTRS}->{add_offset};
     $off_err = $self->{DATASET}->{$name}->{ATTRS}->{add_offset_err};
     $type = $self->{DATASET}->{$name}->{ATTRS}->{calibrated_nt};
-    
+
     return( $cal, $cal_err, $off, $off_err, $type );
 } # End of SDgetcal()...
 
@@ -1027,12 +1027,12 @@ sub SDgetcal
         2 (optional): The start array ref of the slice.
         3 (optional): The size array ref of the slice (HDF calls this the 'edge').
         4 (optional): The stride array ref of the slice.
-    
+
     Returns a PDLA of data if ok, PDLA::null on error.
-    
+
     If the slice arguments are not given, this function will read the entire
         SDS from the file.
-    
+
     The type of the returned PDLA variable is the PDLA equivalent of what was
         stored in the HDF file.
 
@@ -1057,17 +1057,17 @@ sub SDget
 
     return null
         unless defined( $self->{DATASET}->{$name} );
-    
+
     unless( defined( $end ) )
     {   # \@end was not passed in, so we need to set everything else to defaults:
         ($start, $end) = [];
         my @dimnames=$self->SDgetdimnames($name);
-	for my $dim (0 .. $#dimnames) 
+	for my $dim (0 .. $#dimnames)
         {
-            my $use_size = $self->{DATASET}->{$name}->{DIMS}->{$dim}->{SIZE} 
+            my $use_size = $self->{DATASET}->{$name}->{DIMS}->{$dim}->{SIZE}
                 || $self->{DATASET}->{$name}->{DIMS}->{$dim}->{REAL_SIZE};
-                
-            $$end[ $dim ] = $use_size;            
+
+            $$end[ $dim ] = $use_size;
             $$start[ $dim ] = 0;
             $$stride[ $dim ] = 1;
         }
@@ -1088,7 +1088,7 @@ sub SDget
         $buff = null;
         print "$sub: Error returned from _SDreaddata()!\n";
     }
-    
+
     return $buff;
 } # End of SDget()...
 
@@ -1103,7 +1103,7 @@ sub SDget
     Arguments:
         1 : The name of the SDS.
         2 : The fill value.
-    
+
     Returns true on success, undef on error.
 
 =for example
@@ -1116,10 +1116,10 @@ sub SDget
 sub SDsetfillvalue
 {
     my ($self, $name, $value) = @_;
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-    
+
     $value = &{$PDLA::IO::HDF::SDinvtypeTMAP->{$self->{DATASET}->{$name}->{TYPE}}}($value);
     $self->{DATASET}->{$name}->{ATTRS}->{_FillValue} = $value;
 
@@ -1137,7 +1137,7 @@ sub SDsetfillvalue
     Arguments:
         1 : The name of the SDS
         2 : an anonymous array of two elements : [min, max].
-    
+
     Returns true on success, undef on error.
 
 =for example
@@ -1150,7 +1150,7 @@ sub SDsetfillvalue
 sub SDsetrange
 {
     my ($self, $name, $range) = @_;
-    
+
     return undef
         unless defined( $self->{DATASET}->{$name} );
 
@@ -1158,7 +1158,7 @@ sub SDsetrange
     my $max = &{$PDLA::IO::HDF::SDinvtypeTMAP->{$self->{DATASET}->{$name}->{TYPE}}}($$range[1]);
     $range = &{$PDLA::IO::HDF::SDinvtypeTMAP->{$self->{DATASET}->{$name}->{TYPE}}}($range);
     $self->{DATASET}->{$name}->{ATTRS}->{valid_range} = $range;
-    
+
     return( _SDsetrange($self->{DATASET}->{$name}->{SDSID}, $max, $min) + 1 );
 } # End of SDsetrange()...
 
@@ -1167,7 +1167,7 @@ sub SDsetrange
 =for ref
 
     Set the HDF calibration for an SDS.
-    
+
     In HDF lingo, this means to define:
         scale factor
         scale factor error
@@ -1182,9 +1182,9 @@ sub SDsetrange
         3 (optional): the scale factor error (default is 0)
         4 (optional): the offset (default is 0)
         5 (optional): the offset error (default is 0)
-    
+
     Returns true on success, undef on error.
-    
+
     NOTE: This is not required to make a valid HDF SDS, but is there if you want to use it.
 
 =for example
@@ -1205,24 +1205,24 @@ sub SDsetcal
 {
     my $self = shift;
     my $name = shift;
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-    
+
     $self->{DATASET}->{$name}->{ATTRS}->{scale_factor} = shift || 1;
     $self->{DATASET}->{$name}->{ATTRS}->{scale_factor_err} = shift || 0;
     $self->{DATASET}->{$name}->{ATTRS}->{add_offset} = shift || 0;
     $self->{DATASET}->{$name}->{ATTRS}->{add_offset_err} = shift || 0;
     # PDLA_Double is the default type:
-    $self->{DATASET}->{$name}->{ATTRS}->{calibrated_nt} = shift || 6; 
+    $self->{DATASET}->{$name}->{ATTRS}->{calibrated_nt} = shift || 6;
 
-    return( 
-        _SDsetcal( 
+    return(
+        _SDsetcal(
             $self->{DATASET}->{$name}->{SDSID},
-            $self->{DATASET}->{$name}->{ATTRS}->{scale_factor}, 
-            $self->{DATASET}->{$name}->{ATTRS}->{scale_factor_err}, 
-            $self->{DATASET}->{$name}->{ATTRS}->{add_offset}, 
-            $self->{DATASET}->{$name}->{ATTRS}->{add_offset_err}, 
+            $self->{DATASET}->{$name}->{ATTRS}->{scale_factor},
+            $self->{DATASET}->{$name}->{ATTRS}->{scale_factor_err},
+            $self->{DATASET}->{$name}->{ATTRS}->{add_offset},
+            $self->{DATASET}->{$name}->{ATTRS}->{add_offset_err},
             $self->{DATASET}->{$name}->{ATTRS}->{calibrated_nt}
         ) + 1);
 } # End of SDsetcal()...
@@ -1239,9 +1239,9 @@ sub SDsetcal
         1 : The name of the SDS.
         2 (optional): The gzip compression level ( 1 - 9 ). If not
             specified, then 6 is used.
-    
+
     Returns true on success, undef on failure.
-    
+
     WARNING: This is a fairly buggy feature with many version of the HDF library.
     Please just use the 'Chunking' features instead, as they work far better, and
     are more reliable.
@@ -1256,18 +1256,18 @@ sub SDsetcal
 sub SDsetcompress
 {
     my ($self, $name) = @_;
-    
+
     return( undef )
         unless defined( $self->{DATASET}->{$name} );
-    
-    # NOTE: Behavior change from the old version: 
+
+    # NOTE: Behavior change from the old version:
     #    it used to set to 6 if the passed value was greater than 8
     #    it now sets it to 9 if it's greater than 9.
     my $deflate = shift || 6;
     $deflate = 9
         if( $deflate > 9 );
-    
-    return( 1 + _SDsetcompress( $self->{DATASET}->{$name}->{SDSID}, $deflate ) ); 
+
+    return( 1 + _SDsetcompress( $self->{DATASET}->{$name}->{SDSID}, $deflate ) );
 } # End of SDsetcompress()...
 
 =head2 SDsettextattr
@@ -1282,7 +1282,7 @@ sub SDsetcompress
         1 : The text you want to add.
         2 : The name of the attribute
         3 (optional): The name of the SDS.
-        
+
     Returns true on success, undef on failure.
 
 =for example
@@ -1299,19 +1299,19 @@ sub SDsetcompress
 sub SDsettextattr
 {
     my ($self, $text, $name, $dataset) = @_;
-    
+
     if( defined($dataset) )
     {
         return( undef )
             unless defined( $self->{DATASET}->{$dataset} );
-        
+
         $self->{DATASET}->{$dataset}->{ATTRS}->{$name} = $text;
         return( _SDsetattr_text( $self->{DATASET}->{$dataset}->{SDSID}, $name, $text, length($text) ) + 1 );
     }
-    
+
     # Implied else it's a global attribute:
     $self->{GLOBATTR}->{$name} = $text;
-    return( _SDsetattr_text( $self->{SDID}, $name, $text, length($text) ) + 1); 
+    return( _SDsetattr_text( $self->{SDID}, $name, $text, length($text) ) + 1);
 } # End of SDsettextattr()...
 
 =head2 SDsetvalueattr
@@ -1326,7 +1326,7 @@ sub SDsettextattr
         1 : A pdl of value(s) you want to store.
         2 : The name of the attribute.
         3 (optional): the name of the SDS.
-    
+
     Returns true on success, undef on failure.
 
 =for example
@@ -1345,21 +1345,21 @@ sub SDsettextattr
 sub SDsetvalueattr
 {
     my ($self, $values, $name, $dataset) = @_;
-    
-    if( defined($dataset) ) 
+
+    if( defined($dataset) )
     {
         return( undef )
             unless defined( $self->{DATASET}->{$dataset} );
-      
+
         $self->{DATASET}->{$dataset}->{ATTRS}->{$name} = $values;
-        return( _SDsetattr_values( 
-                    $self->{DATASET}->{$dataset}->{SDSID}, $name, $values, 
-                    $values->nelem(), $PDLA::IO::HDF::SDtypeTMAP->{$values->get_datatype()} ) + 1); 
+        return( _SDsetattr_values(
+                    $self->{DATASET}->{$dataset}->{SDSID}, $name, $values,
+                    $values->nelem(), $PDLA::IO::HDF::SDtypeTMAP->{$values->get_datatype()} ) + 1);
     }
     # Implied else it's a global attribute:
     $self->{GLOBATTR}->{$name} = $values;
-    return( _SDsetattr_values( 
-                $self->{SDID}, $name, $values, 
+    return( _SDsetattr_values(
+                $self->{SDID}, $name, $values,
                 $values->nelem(), $PDLA::IO::HDF::SDtypeTMAP->{$values->get_datatype()} ) + 1);
 } # End of SDsetvalueattr()...
 
@@ -1375,7 +1375,7 @@ sub SDsetvalueattr
         1 : The name of the SDS.
         2 : An anonymous array with the dimensions names. For dimensions you want
             to leave alone, leave 'undef' placeholders.
-    
+
     Returns true on success, undef on failure.
 
 =for example
@@ -1392,23 +1392,23 @@ sub SDsetvalueattr
 # FIXME: There are several problems with this:
 #    - The return code is an aggregate, and not necessarily accurate
 #    - It bails on the first error without trying the rest. If that is still
-#        desired, then it should run the check first, and if it's ok, then actually 
+#        desired, then it should run the check first, and if it's ok, then actually
 #        make the HDF library call.
 sub SDsetdimname
 {
     my ($self, $name, $dimname) = @_;
-    
+
     return undef
         unless defined( $self->{DATASET}->{$name} );
-    
+
     my $res = 0;
     foreach( sort keys %{$self->{DATASET}->{$name}->{DIMS}} )
     {
         return( undef )
             unless defined( $$dimname[ $_ ] );
-        
-        $res = _SDsetdimname( 
-            $self->{DATASET}->{$name}->{DIMS}->{$_}->{DIMID}, 
+
+        $res = _SDsetdimname(
+            $self->{DATASET}->{$name}->{DIMS}->{$_}->{DIMID},
             $$dimname[ $_ ] ) + 1;
     }
     return( $res );
@@ -1426,12 +1426,12 @@ sub SDsetdimname
         1 : The name of the SDS.
         2 : A pdl of data.
         3 (optional): An anonymous array of the dim names (only for creation)
-        4 (optional): An anonymous array of the start of the slice to store 
+        4 (optional): An anonymous array of the start of the slice to store
             (only for putting a slice)
 
     Returns true on success, undef on failure.
-    
-    The datatype of the SDS in the HDF file will match the PDLA equivalent as 
+
+    The datatype of the SDS in the HDF file will match the PDLA equivalent as
         much as possible.
 
 =for example
@@ -1456,7 +1456,7 @@ sub SDput
     my($self, $name, $data, $dimname_p, $from) = @_;
 
     my $sub = _pkg_name( 'SDput' );
-    
+
     my $rank = $data->getndims();
     my $dimsize = pack ("L*", reverse $data->dims);
 
@@ -1465,15 +1465,15 @@ sub SDput
     unless ( defined( $self->{DATASET}->{$name} ) )
     {
         my $hdf_type = $PDLA::IO::HDF::SDtypeTMAP->{$data->get_datatype()};
-        
+
         my $res = _SDcreate( $self->{SDID}, $name, $hdf_type, $rank, $dimsize );
         return( undef )
             if ($res == PDLA::IO::HDF->FAIL);
-        
+
         $self->{DATASET}->{$name}->{SDSID} = $res;
         $self->{DATASET}->{$name}->{TYPE} = $hdf_type;
         $self->{DATASET}->{$name}->{RANK} = $rank;
-        
+
         if( $self->Chunking() )
         {
             # Setup chunking on this dataset:
@@ -1495,11 +1495,11 @@ sub SDput
                 $total_chunks *= $num_chunks_this_dim;
             }
             my $chunk_lengths = pack("L*", reverse @chunk_lens);
-            
+
             $res = _SDsetchunk( $self->{DATASET}->{$name}->{SDSID}, $rank, $chunk_lengths );
             return( undef )
                 if ($res == PDLA::IO::HDF->FAIL);
-        
+
             $res = _SDsetchunkcache( $self->{DATASET}->{$name}->{SDSID}, $total_chunks, 0);
             return( undef )
                 if ($res == PDLA::IO::HDF->FAIL);
@@ -1510,7 +1510,7 @@ sub SDput
     my $stride = [];
     if( defined( $from ) )
     {
-        $start = $from; 
+        $start = $from;
         foreach($data->dims)
             { push(@$stride, 1); }
     }
@@ -1539,16 +1539,16 @@ sub SDput
 
         if( defined( @$dimname_p[$j] ) )
         {
-            $res = _SDsetdimname( $dim_id, @$dimname_p[$j] ); 
+            $res = _SDsetdimname( $dim_id, @$dimname_p[$j] );
             return( undef )
                 if( $res == PDLA::IO::HDF->FAIL );
         }
-        
+
         my $dimname = " "x(PDLA::IO::HDF->MAX_NC_NAME);
         my $size = 0;
         my $num_dim_attrs = 0;
         $res = _SDdiminfo( $dim_id, $dimname, $size, $numtype=0, $num_dim_attrs);
-        
+
         return( undef )
             if ($res == PDLA::IO::HDF->FAIL);
         $self->{DATASET}->{$name}->{DIMS}->{$j}->{NAME} = $dimname;
@@ -1576,7 +1576,7 @@ sub SDput
 
 
 # NOTE: This may not be enough, since there may be opened datasets as well! SDendaccess()!
-sub close 
+sub close
 {
     my $self = shift;
     my $sdid = $self->{SDID};
@@ -1584,7 +1584,7 @@ sub close
     return( _SDend( $sdid ) + 1);
 } # End of close()...
 
-sub DESTROY 
+sub DESTROY
 {
     my $self = shift;
     $self->close;
@@ -1592,7 +1592,7 @@ sub DESTROY
 
 EOPM
 
-# 
+#
 # Add the tail of the documentation to the module:
 #
 pp_addpm(<<'EOD');

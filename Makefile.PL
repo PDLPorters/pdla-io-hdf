@@ -8,8 +8,7 @@ my %pkghash;
 # so can output its deps at least
 eval {
   require ExtUtils::Depends;
-  my $pkg = ExtUtils::Depends->new($thispackage, qw(Alien::HDF4));
-  $pkg->set_inc(PDLA_INCLUDE());
+  my $pkg = ExtUtils::Depends->new($thispackage, qw(PDLA Alien::HDF4));
   $pkg->add_typemaps(PDLA_TYPEMAP());
   $pkg->add_pm(
       'HDF.pm' => '$(INST_LIBDIR)/HDF.pm',

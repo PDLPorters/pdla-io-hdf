@@ -11,9 +11,7 @@ my %pkghash;
 # so can output its deps at least
 eval {
   require ExtUtils::Depends;
-  my $pkg = ExtUtils::Depends->new($thispackage, qw(Alien::HDF4));
-  $pkg->set_inc(PDLA::Core::Dev::PDLA_INCLUDE()) if $pdla;
-  $pkg->add_typemaps(PDLA::Core::Dev::PDLA_TYPEMAP()) if $pdla;
+  my $pkg = ExtUtils::Depends->new($thispackage, qw(PDLA Alien::HDF4));
   $pkg->add_pm(
       'VS.pm' => '$(INST_LIBDIR)/VS.pm',
   );

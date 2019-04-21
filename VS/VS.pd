@@ -319,8 +319,7 @@ ENDOFXS
 
 pp_addpm(<<'EOPM');
 
-use PDLA::Primitive;
-use PDLA::Basic;
+use PDLA;
 use strict;
 
 use PDLA::IO::HDF;

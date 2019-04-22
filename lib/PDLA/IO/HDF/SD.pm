@@ -104,10 +104,10 @@ require POSIX;
 
 use FindBin;
 use Alien::HDF4::Install::Files;
-use Inline Pdlapp => 'DATA', name => __PACKAGE__,
+use PDLA::IO::HDF::SD::Inline Pdlapp => 'DATA',
+  package => __PACKAGE__, # PDLA::Core 2.019002
   %{ Alien::HDF4::Install::Files->Inline('C') }, # EUD returns empty if !"C"
-  # relative to t/ !
-  typemaps => "$FindBin::Bin/../lib/PDLA/IO/HDF/typemap.hdf",
+  typemaps => "$FindBin::Bin/lib/PDLA/IO/HDF/typemap.hdf",
   ;
 
 sub _pkg_name
@@ -1384,7 +1384,7 @@ pp_addhdr(<<'EOH');
 EOH
 
 use FindBin;
-use lib "$FindBin::Bin/../../../../../..";
+use lib "$FindBin::Bin/../../../../../../..";
 require 'buildfunc.noinst';
 
 #-------------------------------------------------------------------------

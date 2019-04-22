@@ -3,4 +3,5 @@ VS/VS.c
 VS/VS.o
 VS/VS.pm
 VS/VS.xs*
+.inline/
 _Inline/

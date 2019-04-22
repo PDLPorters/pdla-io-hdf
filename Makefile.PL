@@ -1,6 +1,8 @@
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use lib 'inc'; # for Inline::Module
+use Inline::Module;
 
 my $thispackage = q(PDLA::IO::HDF);
 
@@ -13,7 +15,10 @@ eval {
   %pkghash = $pkg->get_makefile_vars;
 };
 
-my @coredep = ('PDLA::Core' => '2.019100');
+my @coredep = (
+  'PDLA::Core' => '2.019103',
+  'Inline::Pdlapp' => '2.019104', # PACKAGE
+);
 
 WriteMakefile(
     NAME => $thispackage,
@@ -44,4 +49,11 @@ WriteMakefile(
       'Test::More' => 0,
     },
     clean => { FILES => '_Inline' },
+    postamble => {
+      inline => {
+        module => [ qw(PDLA::IO::HDF::SD) ],
+        ilsm => 'Inline::Pdlpp',
+        bundle => 0,
+      },
+    },
 );

@@ -98,264 +98,6 @@ interchangeably.
 
 =cut
 
-
-EOD
-
-
-pp_addhdr(<<'EOH');
-
-#include <hdf.h>
-#include <mfhdf.h>
-#include <string.h>
-
-#define PDLAchar pdl
-#define PDLAuchar pdl
-#define PDLAshort pdl
-#define PDLAint pdl
-#define PDLAlong pdl
-#define PDLAfloat pdl
-#define PDLAdouble pdl
-#define PDLAvoid pdl
-#define uchar unsigned char
-
-
-#define COMP_CODE_NONE 0
-#define COMP_CODE_RLE 1
-#define COMP_CODE_SKPHUFF 3
-#define COMP_CODE_DEFLATE 4
-
-EOH
-
-use FindBin;
-use lib "$FindBin::Bin/..";
-use buildfunc;
-
-#-------------------------------------------------------------------------
-# Create low level interface from HDF SD header file.
-#-------------------------------------------------------------------------
-
-create_low_level (<<'EODEF');
-#
-# SDS Interface
-#
-int SDstart(const char *filename, int access_mode);
-int SDfileinfo(int sd_id, int *ndatasets, int *global_attr);
-int SDattrinfo(int s_id, int attr_index, char *attr_name, int *number_type, int *count);
-#int SDreadattr(int s_id, int attr_index, void *data);
-int SDreadattr(int s_id, int attr_index, PDLAvoid *data);
-int SDgetinfo(int sds_id, char *sds_name, int *rank, int *dimsizes, int *number_type, int *nattrs);
-int SDselect(int sd_id, int index);
-int SDgetdimid(int sds_id, int dim_number);
-int SDdiminfo(int dim_id, char *name, int *count, int *number_type, int *nattrs);
-int SDnametoindex(int sd_id, const char *sds_name);
-#int SDreaddata(int sds_id, int *start, int *stride, int *edge, void *buffer);
-int SDreaddata(int sds_id, int *start, int *stride, int *edge, PDLAvoid *buffer);
-#int SDsetfillvalue(int sds_id, const void *fill_val);
-int SDsetfillvalue(int sds_id, const PDLAvoid *fill_val);
-#int SDsetrange(int sds_id, const void *max, const void *min);
-int SDsetrange(int sds_id, const PDLAvoid *max, const PDLAvoid *min);
-#int SDwritedata(int sds_id, const int *start, const int *stride, const int *edge, const void *data);
-int SDwritedata(int sds_id, const int *start, const int *stride, const int *edge, const PDLAvoid *data);
-int SDsetexternalfile(int sds_id, const char *filename, int offset);
-int SDsetdimstrs(int dim_id, const char *label, const char *unit, const char *format);
-int SDsetdimscale(int dim_id, int count, int number_type, const void *data);
-int SDsetdimname(int dim_id, const char *dim_name);
-int SDsetdatastrs(int sds_id, const char *label, const char *unit, const char *format, const char *coordsys);
-int SDsetcal(int sds_id, double cal, double cal_err, double offset, double offset_err, int number_type);
-#int SDsetcal(int sds_id, float cal, float cal_err, float offset, float offset_err, int number_type);
-int SDsetattr(int s_id, const char *attr_name, int num_type, int count, const void *values);
-int SDreftoindex(int sd_id, int sds_ref);
-int SDiscoordvar(int sds_id);
-int SDidtoref(int sds_id);
-int SDgetdimstrs(int dim_id, char *label, char *unit, char *format, int len);
-int SDgetdimscale(int dim_id, void *data);
-int SDgetdatastrs(int sds_id, char *label, char *unit, char *format, char *coordsys, int len);
-
-
-#ORIG:
-#int SDgetcal(int sds_id, double cal, double cal_err, double offset, double offset_err, double number_type);
-#int SDgetcal(int sds_id, float cal, float cal_err, float offset, float offset_err, int number_type);
-#int SDgetcal(int sds_id, double *cal, double *cal_err, float64 *offset, float64 *offset_err, int *number_type);
-
-int SDendaccess(int sds_id);
-int SDend(int sd_id);
-int SDcreate(int sd_id, const char *name, int number_type, int rank, const int *dimsizes);
-
-int SDwritechunk(int sds_id, const int* origin, const PDLAvoid *data);
-int SDsetchunkcache(int sds_id, int maxcache, int flag);
-
-EODEF
-
-pp_addxs('',<<'ENDXS');
-
-void
-_HEprint(int level)
-        CODE:
-            HEprint(stderr, level);
-
-int
-_SDgetcal(sds_id, cal, cal_err, offset, offset_err, number_type)
-                int sds_id
-                double cal
-                double cal_err
-                double offset
-                double offset_err
-                int* number_type
-        CODE:
-            RETVAL = SDgetcal(sds_id, &cal, &cal_err, &offset, &offset_err, number_type);
-        OUTPUT:
-            RETVAL
-
-void
-UnpackSBigEndianPDLA(size, buff, p)
-                int                size
-                unsigned char      * buff
-                PDLAint             * p
-        CODE:
-                int                i, INTtmp;
-                unsigned char      bch1, bch2;
-                int                * data;
-
-                data = p->data;
-
-                for(i=0; i<size; i++)
-                {
-                        bch1 = buff[i*2];
-                        bch2 = buff[i*2+1];
-
-                        INTtmp = (bch1 << 8) + bch2;
-
-                        if( INTtmp >= 32768 )
-                        { INTtmp -= 65536; }
-
-                        data[i] = INTtmp;
-                }
-            OUTPUT:
-                p
-
-int
-_SDsetcompress(sd_id, ldef);
-                int                sd_id
-                int                 ldef
-        CODE:
-                comp_info c_info;
-                c_info.deflate.level = ldef;
-                RETVAL = SDsetcompress(sd_id, COMP_CODE_DEFLATE, &c_info) + 1;
-        OUTPUT:
-                RETVAL
-
-int
-_SDsetchunk(sds_id, rank, chunk_lengths);
-                int sds_id
-                int rank
-                int* chunk_lengths
-        CODE:
-            HDF_CHUNK_DEF c_def;
-            int i;
-            int32 status = FAIL;
-            for(i = 0; i < rank; i++)
-            {
-                /* fprintf(stderr, "_SDsetchunk(): chunk_lengths[%d] = %d\n", i , chunk_lengths[i]); */
-                c_def.chunk_lengths[i] = chunk_lengths[i];
-                c_def.comp.chunk_lengths[i] = chunk_lengths[i];
-            }
-            c_def.comp.comp_type = COMP_CODE_DEFLATE;
-            c_def.comp.cinfo.deflate.level = 6;
-            status = SDsetchunk(sds_id, c_def, (HDF_CHUNK | HDF_COMP) );
-            if( status == FAIL )
-            {
-                fprintf(stderr, "_SDsetchunk(): return status = %d\n", status);
-                HEprint(stderr, 0);
-            }
-            RETVAL = status;
-        OUTPUT:
-            RETVAL
-
-int
-_SDinitchunk(sds_id, type, rank, chunk_lengths);
-                int sds_id
-                int type
-                int rank
-                int* chunk_lengths
-        CODE:
-            void* data = NULL;
-            int* origin = NULL;
-            int i;
-            size_t size;
-            int status;
-            origin = HDgetspace( sizeof( int ) * rank );
-            for( i = 0; i < rank; i++ )
-                origin[i] = 0;
-            /* Just use the largest datatype here: */
-            size = DFKNTsize(type) * chunk_lengths[0];
-            if( rank > 1 )
-            {
-                for( i = 1; i < rank; i++ )
-                    size *= chunk_lengths[i];
-            }
-            data = HDgetspace( size );
-            status = SDwritechunk(sds_id, origin, data);
-            if( status == FAIL )
-            {
-                fprintf(stderr, "_SDinitchunk(): return status = %d\n", status);
-                HEprint(stderr, 0);
-            }
-            HDfreespace( data );
-            HDfreespace( origin );
-            RETVAL = status;
-        OUTPUT:
-            RETVAL
-
-int
-Hishdf(filename);
-                char*    filename
-        CODE:
-            RETVAL = Hishdf(filename);
-        OUTPUT:
-            RETVAL
-
-int
-_SDgetunlimiteddim(sds_id, dim);
-                int                sds_id
-                int                 dim
-        CODE:
-                char sds_name[250];
-                int rank;
-                int dimsizes[32];
-                int num_type;
-                int nattrs;
-                RETVAL = SDgetinfo(sds_id, sds_name, &rank, dimsizes, &num_type, &nattrs) + 1;
-                if(RETVAL==1){RETVAL = dimsizes[dim];}
-        OUTPUT:
-                RETVAL
-
-int
-_SDsetattr_text(s_id, name, text, size);
-                int                s_id
-                char                 * name
-                char                * text
-                int                 size
-        CODE:
-                RETVAL = SDsetattr(s_id, name, 4, size, text);
-        OUTPUT:
-                RETVAL
-
-int
-_SDsetattr_values(s_id, name, values, size, type);
-                int                s_id
-                char                 * name
-                pdl                * values
-                int                 size
-                int                 type
-        CODE:
-                RETVAL = SDsetattr(s_id, name, type, size, values->data);
-        OUTPUT:
-                RETVAL
-
-ENDXS
-
-pp_addpm(<<'EOPM');
-
 use PDLA;
 
 require POSIX;
@@ -1587,13 +1329,6 @@ sub DESTROY
     $self->close;
 } # End of DESTROY()...
 
-EOPM
-
-#
-# Add the tail of the documentation to the module:
-#
-pp_addpm(<<'EOD');
-
 =head1 CURRENT AUTHOR & MAINTAINER
 
 Judd Taylor, Orbital Systems, Ltd.
@@ -1610,7 +1345,258 @@ perl(1), PDLA(1), PDLA::IO::HDF(1).
 
 =cut
 
-
 EOD
+
+pp_addhdr(<<'EOH');
+
+#include <hdf.h>
+#include <mfhdf.h>
+#include <string.h>
+
+#define PDLAchar pdl
+#define PDLAuchar pdl
+#define PDLAshort pdl
+#define PDLAint pdl
+#define PDLAlong pdl
+#define PDLAfloat pdl
+#define PDLAdouble pdl
+#define PDLAvoid pdl
+#define uchar unsigned char
+
+
+#define COMP_CODE_NONE 0
+#define COMP_CODE_RLE 1
+#define COMP_CODE_SKPHUFF 3
+#define COMP_CODE_DEFLATE 4
+
+EOH
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use buildfunc;
+
+#-------------------------------------------------------------------------
+# Create low level interface from HDF SD header file.
+#-------------------------------------------------------------------------
+
+create_low_level (<<'EODEF');
+#
+# SDS Interface
+#
+int SDstart(const char *filename, int access_mode);
+int SDfileinfo(int sd_id, int *ndatasets, int *global_attr);
+int SDattrinfo(int s_id, int attr_index, char *attr_name, int *number_type, int *count);
+#int SDreadattr(int s_id, int attr_index, void *data);
+int SDreadattr(int s_id, int attr_index, PDLAvoid *data);
+int SDgetinfo(int sds_id, char *sds_name, int *rank, int *dimsizes, int *number_type, int *nattrs);
+int SDselect(int sd_id, int index);
+int SDgetdimid(int sds_id, int dim_number);
+int SDdiminfo(int dim_id, char *name, int *count, int *number_type, int *nattrs);
+int SDnametoindex(int sd_id, const char *sds_name);
+#int SDreaddata(int sds_id, int *start, int *stride, int *edge, void *buffer);
+int SDreaddata(int sds_id, int *start, int *stride, int *edge, PDLAvoid *buffer);
+#int SDsetfillvalue(int sds_id, const void *fill_val);
+int SDsetfillvalue(int sds_id, const PDLAvoid *fill_val);
+#int SDsetrange(int sds_id, const void *max, const void *min);
+int SDsetrange(int sds_id, const PDLAvoid *max, const PDLAvoid *min);
+#int SDwritedata(int sds_id, const int *start, const int *stride, const int *edge, const void *data);
+int SDwritedata(int sds_id, const int *start, const int *stride, const int *edge, const PDLAvoid *data);
+int SDsetexternalfile(int sds_id, const char *filename, int offset);
+int SDsetdimstrs(int dim_id, const char *label, const char *unit, const char *format);
+int SDsetdimscale(int dim_id, int count, int number_type, const void *data);
+int SDsetdimname(int dim_id, const char *dim_name);
+int SDsetdatastrs(int sds_id, const char *label, const char *unit, const char *format, const char *coordsys);
+int SDsetcal(int sds_id, double cal, double cal_err, double offset, double offset_err, int number_type);
+#int SDsetcal(int sds_id, float cal, float cal_err, float offset, float offset_err, int number_type);
+int SDsetattr(int s_id, const char *attr_name, int num_type, int count, const void *values);
+int SDreftoindex(int sd_id, int sds_ref);
+int SDiscoordvar(int sds_id);
+int SDidtoref(int sds_id);
+int SDgetdimstrs(int dim_id, char *label, char *unit, char *format, int len);
+int SDgetdimscale(int dim_id, void *data);
+int SDgetdatastrs(int sds_id, char *label, char *unit, char *format, char *coordsys, int len);
+
+
+#ORIG:
+#int SDgetcal(int sds_id, double cal, double cal_err, double offset, double offset_err, double number_type);
+#int SDgetcal(int sds_id, float cal, float cal_err, float offset, float offset_err, int number_type);
+#int SDgetcal(int sds_id, double *cal, double *cal_err, float64 *offset, float64 *offset_err, int *number_type);
+
+int SDendaccess(int sds_id);
+int SDend(int sd_id);
+int SDcreate(int sd_id, const char *name, int number_type, int rank, const int *dimsizes);
+
+int SDwritechunk(int sds_id, const int* origin, const PDLAvoid *data);
+int SDsetchunkcache(int sds_id, int maxcache, int flag);
+
+EODEF
+
+pp_addxs('',<<'ENDXS');
+
+void
+_HEprint(int level)
+        CODE:
+            HEprint(stderr, level);
+
+int
+_SDgetcal(sds_id, cal, cal_err, offset, offset_err, number_type)
+                int sds_id
+                double cal
+                double cal_err
+                double offset
+                double offset_err
+                int* number_type
+        CODE:
+            RETVAL = SDgetcal(sds_id, &cal, &cal_err, &offset, &offset_err, number_type);
+        OUTPUT:
+            RETVAL
+
+void
+UnpackSBigEndianPDLA(size, buff, p)
+                int                size
+                unsigned char      * buff
+                PDLAint             * p
+        CODE:
+                int                i, INTtmp;
+                unsigned char      bch1, bch2;
+                int                * data;
+
+                data = p->data;
+
+                for(i=0; i<size; i++)
+                {
+                        bch1 = buff[i*2];
+                        bch2 = buff[i*2+1];
+
+                        INTtmp = (bch1 << 8) + bch2;
+
+                        if( INTtmp >= 32768 )
+                        { INTtmp -= 65536; }
+
+                        data[i] = INTtmp;
+                }
+            OUTPUT:
+                p
+
+int
+_SDsetcompress(sd_id, ldef);
+                int                sd_id
+                int                 ldef
+        CODE:
+                comp_info c_info;
+                c_info.deflate.level = ldef;
+                RETVAL = SDsetcompress(sd_id, COMP_CODE_DEFLATE, &c_info) + 1;
+        OUTPUT:
+                RETVAL
+
+int
+_SDsetchunk(sds_id, rank, chunk_lengths);
+                int sds_id
+                int rank
+                int* chunk_lengths
+        CODE:
+            HDF_CHUNK_DEF c_def;
+            int i;
+            int32 status = FAIL;
+            for(i = 0; i < rank; i++)
+            {
+                /* fprintf(stderr, "_SDsetchunk(): chunk_lengths[%d] = %d\n", i , chunk_lengths[i]); */
+                c_def.chunk_lengths[i] = chunk_lengths[i];
+                c_def.comp.chunk_lengths[i] = chunk_lengths[i];
+            }
+            c_def.comp.comp_type = COMP_CODE_DEFLATE;
+            c_def.comp.cinfo.deflate.level = 6;
+            status = SDsetchunk(sds_id, c_def, (HDF_CHUNK | HDF_COMP) );
+            if( status == FAIL )
+            {
+                fprintf(stderr, "_SDsetchunk(): return status = %d\n", status);
+                HEprint(stderr, 0);
+            }
+            RETVAL = status;
+        OUTPUT:
+            RETVAL
+
+int
+_SDinitchunk(sds_id, type, rank, chunk_lengths);
+                int sds_id
+                int type
+                int rank
+                int* chunk_lengths
+        CODE:
+            void* data = NULL;
+            int* origin = NULL;
+            int i;
+            size_t size;
+            int status;
+            origin = HDgetspace( sizeof( int ) * rank );
+            for( i = 0; i < rank; i++ )
+                origin[i] = 0;
+            /* Just use the largest datatype here: */
+            size = DFKNTsize(type) * chunk_lengths[0];
+            if( rank > 1 )
+            {
+                for( i = 1; i < rank; i++ )
+                    size *= chunk_lengths[i];
+            }
+            data = HDgetspace( size );
+            status = SDwritechunk(sds_id, origin, data);
+            if( status == FAIL )
+            {
+                fprintf(stderr, "_SDinitchunk(): return status = %d\n", status);
+                HEprint(stderr, 0);
+            }
+            HDfreespace( data );
+            HDfreespace( origin );
+            RETVAL = status;
+        OUTPUT:
+            RETVAL
+
+int
+Hishdf(filename);
+                char*    filename
+        CODE:
+            RETVAL = Hishdf(filename);
+        OUTPUT:
+            RETVAL
+
+int
+_SDgetunlimiteddim(sds_id, dim);
+                int                sds_id
+                int                 dim
+        CODE:
+                char sds_name[250];
+                int rank;
+                int dimsizes[32];
+                int num_type;
+                int nattrs;
+                RETVAL = SDgetinfo(sds_id, sds_name, &rank, dimsizes, &num_type, &nattrs) + 1;
+                if(RETVAL==1){RETVAL = dimsizes[dim];}
+        OUTPUT:
+                RETVAL
+
+int
+_SDsetattr_text(s_id, name, text, size);
+                int                s_id
+                char                 * name
+                char                * text
+                int                 size
+        CODE:
+                RETVAL = SDsetattr(s_id, name, 4, size, text);
+        OUTPUT:
+                RETVAL
+
+int
+_SDsetattr_values(s_id, name, values, size, type);
+                int                s_id
+                char                 * name
+                pdl                * values
+                int                 size
+                int                 type
+        CODE:
+                RETVAL = SDsetattr(s_id, name, type, size, values->data);
+        OUTPUT:
+                RETVAL
+
+ENDXS
 
 pp_done();

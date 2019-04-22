@@ -7,6 +7,7 @@ VS/Changes
 VS/Makefile.PL
 VS/VS.pd
 buildfunc.noinst
+inc/Inline/Module.pm
 lib/PDLA/IO/HDF.pm
 lib/PDLA/IO/HDF/SD.pm
 lib/PDLA/IO/HDF/typemap.hdf

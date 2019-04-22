@@ -20,305 +20,6 @@ For more information on HDF4, see http://www.hdfgroup.org/products/hdf4/
 
 =cut
 
-EOD
-
-
-pp_addhdr(<<'EOH');
-
-#include <hdf.h>
-#include <mfhdf.h>
-#include <string.h>
-#include <stdio.h>
-
-#include <perl.h>
-#include <EXTERN.h>
-#include <XSUB.h>
-
-#define PDLAchar pdl
-#define PDLAuchar pdl
-#define PDLAshort pdl
-#define PDLAint pdl
-#define PDLAlong pdl
-#define PDLAfloat pdl
-#define PDLAdouble pdl
-#define PDLAvoid pdl
-#define uchar unsigned char
-
-#define PDLAlist pdl
-
-EOH
-
-#define AVRef AV
-#pp_bless ("PDLA::IO::HDF::VS");
-
-use FindBin;
-use lib "$FindBin::Bin/..";
-use buildfunc;
-
-
-#-------------------------------------------------------------------------
-# Create low level interface from HDF VS and V header file.
-#-------------------------------------------------------------------------
-
-create_low_level (<<'EODEF');
-#
-# HDF (H) Interface
-#
-int Hishdf(const char *filename);
-int Hopen(const char *filename, int access, int n_dds);
-int Hclose(int file_id)+1;
-#
-# VGROUP/VDATA Interface
-#
-int Vstart(int hdfid);
-int Vend(int hdfid);
-int Vgetid(int hdfid, int vgroup_ref);
-int Vattach(int hdfid, int vgroup_ref, const char *access);
-int Vdetach(int vgroup_id);
-int Vntagrefs(int vgroup_id);
-
-int Vgettagref(int vgroup_id, int index, int *tag, int *ref);
-int Vinquire(int vgroup_id, int *n_entries, char *vgroup_name);
-
-int Vsetname(int vgroup_id, const char *vgroup_name);
-int Vsetclass(int vgroup_id, const char *vgroup_class);
-int Visvg(int vgroup_id, int obj_ref);
-int Visvs(int vgroup_id, int obj_ref);
-int Vaddtagref(int vgroup_id, int tag, int ref);
-int Vinsert(int vgroup_id, int v_id);
-
-int VSsetname(int vdata_id, const char *vdata_name);
-int VSsetclass(int vdata_id, const char *vdata_class);
-int VSgetid(int hdfid, int vdata_ref);
-int VSattach(int hdfid, int vdata_ref, const char *access);
-int VSdetach(int vdata_id);
-int VSelts(int vdata_id);
-int VSsizeof(int vdata_id, const char *fields);
-int VSfind(int hdfid, const char *vdata_name);
-int VFfieldtype(int vdata_id, int field_index);
-int VFnfields(int vdata_ref);
-int VFfieldorder(int vdata_ref, int field_index);
-
-int VSfdefine(int vata_id, const char *fieldname, int data_type, int order)+1;
-int VSsetfields(int vata_id, const char *fieldname_list)+1;
-int VSwrite(int vdata_id, const PDLAvoid *databuf, int n_records, int interlace_mode);
-int VSread(int vdata_id, PDLAvoid *databuf, int n_records, int interlace_mode);
-#int VSlone(int file_id, int *ref_array, int max_ref);
-
-int VSfnattrs(int vdata_id, int field_index);
-int VSgetattr(int vdata_id, int field_index, int attr_index, PDLAlong *values);
-int VSisattr(int vdata_id);
-
-int SDstart(const char *filename, int access_mode);
-int SDreftoindex(int sd_id, int sds_ref);
-int SDselect(int sd_id, int index);
-int SDgetinfo(int sds_id, char *sds_name, int *rank, int *dimsizes, int *number_type, int *nattrs);
-int SDendaccess(int sds_id);
-int SDend(int sd_id);
-
-EODEF
-
-pp_addxs('',<<'ENDOFXS');
-
-int
-_WriteMultPDLA(VID, nb_records, nb_fields, interlace_mode, ...);
-                int VID
-                int nb_records
-                int nb_fields
-                int interlace_mode
-        PROTOTYPE: @
-        CODE:
-            unsigned char *databuff, *ptrbuff;
-            unsigned long int total_size;
-            int i, j, k, curvalue, cursdim;
-            SV * sizeofPDLA;
-            SV * listofPDLA;
-            SV * sdimofPDLA;
-            SV * * SvTmp1, * * SvTmp2, * * SvTmp3;
-            pdl *curPDLA;
-
-            sizeofPDLA = SvRV( ST(4) );
-            sdimofPDLA = SvRV( ST(5) );
-            listofPDLA = SvRV( ST(6) );
-
-            total_size = 0;
-            for(i=0; i<nb_fields; i++)
-            {
-                SvTmp1 = av_fetch((AV*)sizeofPDLA, i, 0);
-                curvalue = SvIV( *SvTmp1 );
-
-                SvTmp3 = av_fetch((AV*)sdimofPDLA, i, 0);
-                cursdim = SvIV( *SvTmp3 );
-
-                total_size += curvalue * cursdim;
-            }
-
-            total_size *= nb_records;
-            databuff = (unsigned char *)malloc( total_size );
-            if(databuff==NULL)
-                croak("memory allocation error");
-            ptrbuff = databuff;
-
-            if(interlace_mode == 0)
-            {
-                for(i=0; i<nb_records; i++)
-                {
-                    for(j=0; j<nb_fields; j++)
-                    {
-                        SvTmp2 = av_fetch((AV*)listofPDLA, j, 0);
-                        curPDLA = PDLA->SvPDLAV( *SvTmp2 );
-
-                        SvTmp3 = av_fetch((AV*)sdimofPDLA, j, 0);
-                        cursdim = SvIV( *SvTmp3 );
-
-                        SvTmp1 = av_fetch((AV*)sizeofPDLA, j, 0);
-                        curvalue = SvIV( *SvTmp1 );
-
-                        for(k=0; k<cursdim; k++)
-                        {
-                            #printf("Value %d= %d\n", k, *(int *)(curPDLA->data + curvalue*i + curvalue*k*nb_records));
-                            memcpy( ptrbuff, (unsigned char *)(curPDLA->data + curvalue*i + curvalue*k*nb_records), curvalue );
-
-                            #printf("Value %d=%d\n", k, *(int *)(curPDLA->data + curvalue*i*cursdim + curvalue*k));
-                            #memcpy( ptrbuff, (unsigned char *)(curPDLA->data + curvalue*i*cursdim + curvalue*k), curvalue );
-
-                            #printf("buffer %d= %d\n", k, *(int *)ptrbuff);
-                            ptrbuff += curvalue;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                for(j=0; j<nb_fields; j++)
-                {
-                    SvTmp2 = av_fetch((AV*)listofPDLA, j, 0);
-                    curPDLA = PDLA->SvPDLAV( *SvTmp2 );
-
-                    SvTmp1 = av_fetch((AV*)sizeofPDLA, j, 0);
-                    curvalue = SvIV( *SvTmp1 );
-
-                    SvTmp3 = av_fetch((AV*)sdimofPDLA, j, 0);
-                    cursdim = SvIV( *SvTmp3 );
-
-                    memcpy( ptrbuff, (unsigned char *)(curPDLA->data), curvalue*nb_records*cursdim );
-                    ptrbuff += curvalue*nb_records*cursdim;
-                    #printf("buffer %d= %d\n", k, curvalue*nb_records*cursdim);
-                }
-                interlace_mode = 1;
-            }
-            fprintf(stderr, "Calling VSwrite(VID=%d, databuff=%p, nb_records=%d, interlace_mode=%d)...\n",
-                    VID, databuff, nb_records, interlace_mode);
-            RETVAL = VSwrite(VID, databuff, nb_records, interlace_mode);
-        OUTPUT:
-            RETVAL
-
-void
-_Vgetname(vgroup_id, vgroup_name);
-                int vgroup_id
-                char *vgroup_name
-        CODE:
-                vgroup_name=(char *)malloc(VGNAMELENMAX);
-                Vgetname(vgroup_id,vgroup_name);
-        OUTPUT:
-                vgroup_name
-
-void
-_VSgetname(vdata_id, vdata_name);
-                int vdata_id
-                char *vdata_name
-        CODE:
-                vdata_name=(char *)malloc(VGNAMELENMAX*sizeof(char));
-                VSgetname(vdata_id,vdata_name);
-        OUTPUT:
-                vdata_name
-
-void
-_Vgetclass(vgroup_id, vgroup_class);
-                int vgroup_id
-                char *vgroup_class
-        CODE:
-                vgroup_class=(char *)malloc(VGNAMELENMAX*sizeof(char));
-                Vgetclass(vgroup_id,vgroup_class);
-        OUTPUT:
-                vgroup_class
-
-void
-_VSgetclass(vdata_id, vdata_class);
-                int vdata_id
-                char *vdata_class
-        CODE:
-                vdata_class=(char *)malloc(VGNAMELENMAX*sizeof(char));
-                VSgetclass(vdata_id,vdata_class);
-        OUTPUT:
-                vdata_class
-
-int
-_VSgetfields(vdata_id, fields);
-                int vdata_id
-                char *fields
-        CODE:
-                char *tmpfields;
-                int len;
-                tmpfields=(char *)malloc(10000*sizeof(char));
-                RETVAL=VSgetfields(vdata_id, tmpfields);
-                len=strlen(tmpfields);
-                fields=(char *)malloc(len*sizeof(char)+1);
-                strcpy(fields,tmpfields);
-        OUTPUT:
-                RETVAL
-                fields
-
-AV *
-_VSlone(file_id);
-		int file_id;
-	CODE:
-		AV  *ref_vdata_list;
-		int *ref_array;
-		SV  *ref_vdata;
-		int32 nlone;
-		ref_vdata_list=newAV();
-		ref_array=(int *)malloc(MAX_FIELD_SIZE*sizeof(int));
-		nlone = VSlone(file_id, ref_array, MAX_FIELD_SIZE);
-		int32 i;
-		for(i=0;i<nlone;i++){
-			ref_vdata=newSViv((IV)ref_array[i]);
-			av_push(ref_vdata_list, ref_vdata);
-		}
-		RETVAL=ref_vdata_list;
-	OUTPUT:
-		RETVAL
-
-
-int
-_VSinquire(vdata_id, n_records, interlace, fields, vdata_size, vdata_name);
-        int vdata_id
-        int *n_records
-        int *interlace
-        char *fields
-        int *vdata_size
-        char *vdata_name
-CODE:
-        char *tmpfields;
-        int len;
-        vdata_name=(char *)malloc(VGNAMELENMAX*sizeof(char));
-        tmpfields=(char *)malloc(10000*sizeof(char));
-        RETVAL=VSinquire(vdata_id, n_records, interlace, tmpfields, vdata_size, vdata_name)+1;
-        len=strlen(tmpfields);
-        fields=(char *)malloc(len*sizeof(char)+1);
-        strcpy(fields,tmpfields);
-OUTPUT:
-        RETVAL
-        n_records
-        interlace
-        fields
-        vdata_size
-        vdata_name
-
-ENDOFXS
-
-pp_addpm(<<'EOPM');
-
 use PDLA;
 use strict;
 
@@ -761,13 +462,6 @@ sub DESTROY
     $self->close;
 } # End of DESTROY()...
 
-EOPM
-
-#
-# Add the tail of the docs:
-#
-pp_addpm(<<'EOD');
-
 =head1 CURRENT AUTHOR & MAINTAINER
 
 Judd Taylor, Orbital Systems, Ltd.
@@ -786,5 +480,300 @@ perl(1), PDLA(1), PDLA::IO::HDF(1).
 
 
 EOD
+
+
+pp_addhdr(<<'EOH');
+
+#include <hdf.h>
+#include <mfhdf.h>
+#include <string.h>
+#include <stdio.h>
+
+#include <perl.h>
+#include <EXTERN.h>
+#include <XSUB.h>
+
+#define PDLAchar pdl
+#define PDLAuchar pdl
+#define PDLAshort pdl
+#define PDLAint pdl
+#define PDLAlong pdl
+#define PDLAfloat pdl
+#define PDLAdouble pdl
+#define PDLAvoid pdl
+#define uchar unsigned char
+
+#define PDLAlist pdl
+
+EOH
+
+#define AVRef AV
+#pp_bless ("PDLA::IO::HDF::VS");
+
+use FindBin;
+use lib "$FindBin::Bin/..";
+use buildfunc;
+
+
+#-------------------------------------------------------------------------
+# Create low level interface from HDF VS and V header file.
+#-------------------------------------------------------------------------
+
+create_low_level (<<'EODEF');
+#
+# HDF (H) Interface
+#
+int Hishdf(const char *filename);
+int Hopen(const char *filename, int access, int n_dds);
+int Hclose(int file_id)+1;
+#
+# VGROUP/VDATA Interface
+#
+int Vstart(int hdfid);
+int Vend(int hdfid);
+int Vgetid(int hdfid, int vgroup_ref);
+int Vattach(int hdfid, int vgroup_ref, const char *access);
+int Vdetach(int vgroup_id);
+int Vntagrefs(int vgroup_id);
+
+int Vgettagref(int vgroup_id, int index, int *tag, int *ref);
+int Vinquire(int vgroup_id, int *n_entries, char *vgroup_name);
+
+int Vsetname(int vgroup_id, const char *vgroup_name);
+int Vsetclass(int vgroup_id, const char *vgroup_class);
+int Visvg(int vgroup_id, int obj_ref);
+int Visvs(int vgroup_id, int obj_ref);
+int Vaddtagref(int vgroup_id, int tag, int ref);
+int Vinsert(int vgroup_id, int v_id);
+
+int VSsetname(int vdata_id, const char *vdata_name);
+int VSsetclass(int vdata_id, const char *vdata_class);
+int VSgetid(int hdfid, int vdata_ref);
+int VSattach(int hdfid, int vdata_ref, const char *access);
+int VSdetach(int vdata_id);
+int VSelts(int vdata_id);
+int VSsizeof(int vdata_id, const char *fields);
+int VSfind(int hdfid, const char *vdata_name);
+int VFfieldtype(int vdata_id, int field_index);
+int VFnfields(int vdata_ref);
+int VFfieldorder(int vdata_ref, int field_index);
+
+int VSfdefine(int vata_id, const char *fieldname, int data_type, int order)+1;
+int VSsetfields(int vata_id, const char *fieldname_list)+1;
+int VSwrite(int vdata_id, const PDLAvoid *databuf, int n_records, int interlace_mode);
+int VSread(int vdata_id, PDLAvoid *databuf, int n_records, int interlace_mode);
+#int VSlone(int file_id, int *ref_array, int max_ref);
+
+int VSfnattrs(int vdata_id, int field_index);
+int VSgetattr(int vdata_id, int field_index, int attr_index, PDLAlong *values);
+int VSisattr(int vdata_id);
+
+int SDstart(const char *filename, int access_mode);
+int SDreftoindex(int sd_id, int sds_ref);
+int SDselect(int sd_id, int index);
+int SDgetinfo(int sds_id, char *sds_name, int *rank, int *dimsizes, int *number_type, int *nattrs);
+int SDendaccess(int sds_id);
+int SDend(int sd_id);
+
+EODEF
+
+pp_addxs('',<<'ENDOFXS');
+
+int
+_WriteMultPDLA(VID, nb_records, nb_fields, interlace_mode, ...);
+                int VID
+                int nb_records
+                int nb_fields
+                int interlace_mode
+        PROTOTYPE: @
+        CODE:
+            unsigned char *databuff, *ptrbuff;
+            unsigned long int total_size;
+            int i, j, k, curvalue, cursdim;
+            SV * sizeofPDLA;
+            SV * listofPDLA;
+            SV * sdimofPDLA;
+            SV * * SvTmp1, * * SvTmp2, * * SvTmp3;
+            pdl *curPDLA;
+
+            sizeofPDLA = SvRV( ST(4) );
+            sdimofPDLA = SvRV( ST(5) );
+            listofPDLA = SvRV( ST(6) );
+
+            total_size = 0;
+            for(i=0; i<nb_fields; i++)
+            {
+                SvTmp1 = av_fetch((AV*)sizeofPDLA, i, 0);
+                curvalue = SvIV( *SvTmp1 );
+
+                SvTmp3 = av_fetch((AV*)sdimofPDLA, i, 0);
+                cursdim = SvIV( *SvTmp3 );
+
+                total_size += curvalue * cursdim;
+            }
+
+            total_size *= nb_records;
+            databuff = (unsigned char *)malloc( total_size );
+            if(databuff==NULL)
+                croak("memory allocation error");
+            ptrbuff = databuff;
+
+            if(interlace_mode == 0)
+            {
+                for(i=0; i<nb_records; i++)
+                {
+                    for(j=0; j<nb_fields; j++)
+                    {
+                        SvTmp2 = av_fetch((AV*)listofPDLA, j, 0);
+                        curPDLA = PDLA->SvPDLAV( *SvTmp2 );
+
+                        SvTmp3 = av_fetch((AV*)sdimofPDLA, j, 0);
+                        cursdim = SvIV( *SvTmp3 );
+
+                        SvTmp1 = av_fetch((AV*)sizeofPDLA, j, 0);
+                        curvalue = SvIV( *SvTmp1 );
+
+                        for(k=0; k<cursdim; k++)
+                        {
+                            #printf("Value %d= %d\n", k, *(int *)(curPDLA->data + curvalue*i + curvalue*k*nb_records));
+                            memcpy( ptrbuff, (unsigned char *)(curPDLA->data + curvalue*i + curvalue*k*nb_records), curvalue );
+
+                            #printf("Value %d=%d\n", k, *(int *)(curPDLA->data + curvalue*i*cursdim + curvalue*k));
+                            #memcpy( ptrbuff, (unsigned char *)(curPDLA->data + curvalue*i*cursdim + curvalue*k), curvalue );
+
+                            #printf("buffer %d= %d\n", k, *(int *)ptrbuff);
+                            ptrbuff += curvalue;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for(j=0; j<nb_fields; j++)
+                {
+                    SvTmp2 = av_fetch((AV*)listofPDLA, j, 0);
+                    curPDLA = PDLA->SvPDLAV( *SvTmp2 );
+
+                    SvTmp1 = av_fetch((AV*)sizeofPDLA, j, 0);
+                    curvalue = SvIV( *SvTmp1 );
+
+                    SvTmp3 = av_fetch((AV*)sdimofPDLA, j, 0);
+                    cursdim = SvIV( *SvTmp3 );
+
+                    memcpy( ptrbuff, (unsigned char *)(curPDLA->data), curvalue*nb_records*cursdim );
+                    ptrbuff += curvalue*nb_records*cursdim;
+                    #printf("buffer %d= %d\n", k, curvalue*nb_records*cursdim);
+                }
+                interlace_mode = 1;
+            }
+            fprintf(stderr, "Calling VSwrite(VID=%d, databuff=%p, nb_records=%d, interlace_mode=%d)...\n",
+                    VID, databuff, nb_records, interlace_mode);
+            RETVAL = VSwrite(VID, databuff, nb_records, interlace_mode);
+        OUTPUT:
+            RETVAL
+
+void
+_Vgetname(vgroup_id, vgroup_name);
+                int vgroup_id
+                char *vgroup_name
+        CODE:
+                vgroup_name=(char *)malloc(VGNAMELENMAX);
+                Vgetname(vgroup_id,vgroup_name);
+        OUTPUT:
+                vgroup_name
+
+void
+_VSgetname(vdata_id, vdata_name);
+                int vdata_id
+                char *vdata_name
+        CODE:
+                vdata_name=(char *)malloc(VGNAMELENMAX*sizeof(char));
+                VSgetname(vdata_id,vdata_name);
+        OUTPUT:
+                vdata_name
+
+void
+_Vgetclass(vgroup_id, vgroup_class);
+                int vgroup_id
+                char *vgroup_class
+        CODE:
+                vgroup_class=(char *)malloc(VGNAMELENMAX*sizeof(char));
+                Vgetclass(vgroup_id,vgroup_class);
+        OUTPUT:
+                vgroup_class
+
+void
+_VSgetclass(vdata_id, vdata_class);
+                int vdata_id
+                char *vdata_class
+        CODE:
+                vdata_class=(char *)malloc(VGNAMELENMAX*sizeof(char));
+                VSgetclass(vdata_id,vdata_class);
+        OUTPUT:
+                vdata_class
+
+int
+_VSgetfields(vdata_id, fields);
+                int vdata_id
+                char *fields
+        CODE:
+                char *tmpfields;
+                int len;
+                tmpfields=(char *)malloc(10000*sizeof(char));
+                RETVAL=VSgetfields(vdata_id, tmpfields);
+                len=strlen(tmpfields);
+                fields=(char *)malloc(len*sizeof(char)+1);
+                strcpy(fields,tmpfields);
+        OUTPUT:
+                RETVAL
+                fields
+
+AV *
+_VSlone(file_id);
+		int file_id;
+	CODE:
+		AV  *ref_vdata_list;
+		int *ref_array;
+		SV  *ref_vdata;
+		int32 nlone;
+		ref_vdata_list=newAV();
+		ref_array=(int *)malloc(MAX_FIELD_SIZE*sizeof(int));
+		nlone = VSlone(file_id, ref_array, MAX_FIELD_SIZE);
+		int32 i;
+		for(i=0;i<nlone;i++){
+			ref_vdata=newSViv((IV)ref_array[i]);
+			av_push(ref_vdata_list, ref_vdata);
+		}
+		RETVAL=ref_vdata_list;
+	OUTPUT:
+		RETVAL
+
+
+int
+_VSinquire(vdata_id, n_records, interlace, fields, vdata_size, vdata_name);
+        int vdata_id
+        int *n_records
+        int *interlace
+        char *fields
+        int *vdata_size
+        char *vdata_name
+CODE:
+        char *tmpfields;
+        int len;
+        vdata_name=(char *)malloc(VGNAMELENMAX*sizeof(char));
+        tmpfields=(char *)malloc(10000*sizeof(char));
+        RETVAL=VSinquire(vdata_id, n_records, interlace, tmpfields, vdata_size, vdata_name)+1;
+        len=strlen(tmpfields);
+        fields=(char *)malloc(len*sizeof(char)+1);
+        strcpy(fields,tmpfields);
+OUTPUT:
+        RETVAL
+        n_records
+        interlace
+        fields
+        vdata_size
+        vdata_name
+
+ENDOFXS
 
 pp_done();

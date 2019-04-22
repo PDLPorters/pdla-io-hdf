@@ -107,7 +107,7 @@ use Alien::HDF4::Install::Files;
 use Inline Pdlapp => 'DATA', name => __PACKAGE__,
   %{ Alien::HDF4::Install::Files->Inline('C') }, # EUD returns empty if !"C"
   # relative to t/ !
-  typemaps => "$FindBin::Bin/../typemap.hdf",
+  typemaps => "$FindBin::Bin/../lib/PDLA/IO/HDF/typemap.hdf",
   ;
 
 sub _pkg_name

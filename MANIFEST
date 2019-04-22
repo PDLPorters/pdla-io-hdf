@@ -9,10 +9,10 @@ VS/VS.pd
 buildfunc.noinst
 lib/PDLA/IO/HDF.pm
 lib/PDLA/IO/HDF/SD.pm
+lib/PDLA/IO/HDF/typemap.hdf
 t/00-report-prereqs.t
 t/01-checkmanifest.t
 t/hdf_sd.t
 t/hdf_vdata.t
 t/hdf_vgroup.t
-typemap.hdf
 xt/00-check-changelog.t

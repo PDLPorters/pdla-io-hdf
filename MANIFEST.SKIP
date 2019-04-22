@@ -7,3 +7,4 @@
 ^\.travis.yml$
 MANIFEST\.SKIP$
 MYMETA\.\w+$
+^\.appveyor.yml$

@@ -358,8 +358,6 @@ pp_addpm(<<'EOPM');
 
 use PDLA;
 
-use PDLA::IO::HDF;
-
 require POSIX;
 
 sub _pkg_name

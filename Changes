@@ -1,3 +1,6 @@
+2.019101 
+ - ::HDF still "use"s ::VS and ::SD, but not vice versa
+
 2.019100 2019-04-21
  - updated from pdl master
  - metadata, spellings, portability (object suffix)

@@ -322,8 +322,6 @@ pp_addpm(<<'EOPM');
 use PDLA;
 use strict;
 
-use PDLA::IO::HDF;
-
 my $TMAP = {
     PDLA::byte->[0]   => 1,
     PDLA::short->[0]  => 2,

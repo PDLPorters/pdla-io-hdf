@@ -512,7 +512,7 @@ EOH
 
 use FindBin;
 use lib "$FindBin::Bin/..";
-use buildfunc;
+require 'buildfunc.noinst';
 
 
 #-------------------------------------------------------------------------

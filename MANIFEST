@@ -10,7 +10,7 @@ TODO
 VS/Changes
 VS/Makefile.PL
 VS/VS.pd
-buildfunc.pm
+buildfunc.noinst
 t/00-report-prereqs.t
 t/01-checkmanifest.t
 t/hdf_sd.t

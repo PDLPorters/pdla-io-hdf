@@ -161,7 +161,7 @@ build_inline :
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module\n";
         $section .=
-            "\t\$(ABSPERLRUN) -Iinc -Ilib -Iblib/lib -MInline=Config,directory,$inline_build_path -M$module -e 1 --\n";
+            "\t\$(ABSPERLRUN) -Iinc -Ilib -Iblib/lib -MInline=Config,directory,$inline_build_path,build_noisy,1 -M$module -e 1 --\n";
         $section .=
             "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
         $section .=

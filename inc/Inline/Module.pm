@@ -154,8 +154,12 @@ distdir_inline : create_distdir
 # Inline currently only supports dynamic
 dynamic :: build_inline
 
-build_inline :
-\t\$(MKPATH) $inline_build_path
+$inline_build_path\$(DFSEP).exists :
+\t\$(NOECHO) \$(MKPATH) $inline_build_path
+\t\$(NOECHO) \$(CHMOD) \$(PERM_DIR) $inline_build_path
+\t\$(NOECHO) \$(TOUCH) $inline_build_path\$(DFSEP).exists
+
+build_inline : $inline_build_path\$(DFSEP).exists
 ...
     for my $module (@$code_modules) {
         $section .= <<"...";

@@ -35,7 +35,7 @@ interfaces, for that see the docs on those modules.
 
 =cut
 
-our $VERSION = '2.019101';
+our $VERSION = '2.019102';
 $VERSION = eval $VERSION;
 
 use PDLA::Primitive;

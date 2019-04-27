@@ -1,3 +1,5 @@
+ - inc'ed Inline::Module can now do parallel build
+
 2.019101 2019-04-27
  - ::HDF still "use"s ::VS and ::SD, but not vice versa
  - rename buildfunc.pm to buildfunc.noinst so not installed

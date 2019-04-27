@@ -142,6 +142,7 @@ sub postamble {
         $class->make_stub_modules(@{$meta->{stub}});
     }
 
+    my @mangled = _mangle_name(@$code_modules);
     my $section = <<"...";
 clean ::
 \t- \$(RM_RF) $inline_build_path
@@ -159,10 +160,13 @@ $inline_build_path\$(DFSEP).exists :
 \t\$(NOECHO) \$(CHMOD) \$(PERM_DIR) $inline_build_path
 \t\$(NOECHO) \$(TOUCH) $inline_build_path\$(DFSEP).exists
 
-build_inline : $inline_build_path\$(DFSEP).exists
+build_inline : @mangled
 ...
     for my $module (@$code_modules) {
+        my ($this_mangled) = _mangle_name($module);
         $section .= <<"...";
+
+$this_mangled : $inline_build_path\$(DFSEP).exists
 \t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module
 \t\$(ABSPERLRUN) -Iinc -Ilib -Iblib/lib -MInline=Config,directory,$inline_build_path,build_noisy,1 -M$module -e 1 --
 \t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module
@@ -171,6 +175,10 @@ build_inline : $inline_build_path\$(DFSEP).exists
     }
 
     return $section;
+}
+
+sub _mangle_name {
+  map { my $n = $_; $n =~ s#:+#_#g; "build_inline_$n" } @_;
 }
 
 #------------------------------------------------------------------------------

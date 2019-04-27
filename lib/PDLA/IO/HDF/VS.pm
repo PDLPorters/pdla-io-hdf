@@ -1,4 +1,4 @@
-pp_addpm({At => Top}, <<'EOD');
+package PDLA::IO::HDF::VS;
 
 =head1 NAME
 
@@ -22,6 +22,14 @@ For more information on HDF4, see http://www.hdfgroup.org/products/hdf4/
 
 use PDLA;
 use strict;
+
+use FindBin;
+use Alien::HDF4::Install::Files;
+use PDLA::IO::HDF::VS::Inline Pdlapp => 'DATA',
+  package => __PACKAGE__, # PDLA::Core 2.019002
+  %{ Alien::HDF4::Install::Files->Inline('C') }, # EUD returns empty if !"C"
+  typemaps => "$FindBin::Bin/lib/PDLA/IO/HDF/typemap.hdf",
+  ;
 
 my $TMAP = {
     PDLA::byte->[0]   => 1,
@@ -478,9 +486,11 @@ perl(1), PDLA(1), PDLA::IO::HDF(1).
 
 =cut
 
+1;
 
-EOD
+__DATA__
 
+__Pdlapp__
 
 pp_addhdr(<<'EOH');
 
@@ -511,9 +521,8 @@ EOH
 #pp_bless ("PDLA::IO::HDF::VS");
 
 use FindBin;
-use lib "$FindBin::Bin/..";
+use lib "$FindBin::Bin/../../../../../../..";
 require 'buildfunc.noinst';
-
 
 #-------------------------------------------------------------------------
 # Create low level interface from HDF VS and V header file.

@@ -1,11 +1,6 @@
 #!include_default
-\.bs$
-\.xs$
-\.[co]$
-^VS/VS.pm$
 ^\.travis.yml$
 MANIFEST\.SKIP$
 MYMETA\.\w+$
 ^\.appveyor.yml$
-^_Inline
 ^\.inline

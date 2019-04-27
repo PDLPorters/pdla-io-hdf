@@ -48,10 +48,10 @@ WriteMakefile(
     'TEST_REQUIRES' => {
       'Test::More' => 0,
     },
-    clean => { FILES => '_Inline' },
+    clean => { FILES => '.inline' },
     postamble => {
       inline => {
-        module => [ qw(PDLA::IO::HDF::SD) ],
+        module => [ qw(PDLA::IO::HDF::SD PDLA::IO::HDF::VS) ],
         ilsm => 'Inline::Pdlpp',
         bundle => 0,
       },

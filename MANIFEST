@@ -3,13 +3,11 @@ MANIFEST			This list of files
 Makefile.PL
 README.md
 TODO
-VS/Changes
-VS/Makefile.PL
-VS/VS.pd
 buildfunc.noinst
 inc/Inline/Module.pm
 lib/PDLA/IO/HDF.pm
 lib/PDLA/IO/HDF/SD.pm
+lib/PDLA/IO/HDF/VS.pm
 lib/PDLA/IO/HDF/typemap.hdf
 t/00-report-prereqs.t
 t/01-checkmanifest.t

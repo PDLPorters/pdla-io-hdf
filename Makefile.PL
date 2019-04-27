@@ -39,7 +39,7 @@ WriteMakefile(
     'CONFIGURE_REQUIRES' => {
       'ExtUtils::MakeMaker' => 0,
       'ExtUtils::Depends' => '0.402',
-      'Alien::HDF4' => 0,
+      'Alien::HDF4' => '0.05',
       @coredep,
     },
     'BUILD_REQUIRES' => {

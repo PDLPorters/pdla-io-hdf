@@ -1,6 +1,7 @@
-2.019101 
+2.019101 2019-04-27
  - ::HDF still "use"s ::VS and ::SD, but not vice versa
  - rename buildfunc.pm to buildfunc.noinst so not installed
+ - simplify builds with Inline::Module + Inline::Pdlapp, should be invisible
 
 2.019100 2019-04-21
  - updated from pdl master

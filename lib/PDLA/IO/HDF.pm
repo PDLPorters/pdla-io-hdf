@@ -1,6 +1,5 @@
 package PDLA::IO::HDF;
 
-
 =head1 NAME
 
 PDLA::IO::HDF - A PDLA interface to the HDF4 library.
@@ -36,7 +35,7 @@ interfaces, for that see the docs on those modules.
 
 =cut
 
-our $VERSION = '2.019100';
+our $VERSION = '2.019101';
 $VERSION = eval $VERSION;
 
 use PDLA::Primitive;

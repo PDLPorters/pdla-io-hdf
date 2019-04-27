@@ -158,14 +158,12 @@ build_inline :
 \t\$(MKPATH) $inline_build_path
 ...
     for my $module (@$code_modules) {
-        $section .=
-            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module\n";
-        $section .=
-            "\t\$(ABSPERLRUN) -Iinc -Ilib -Iblib/lib -MInline=Config,directory,$inline_build_path,build_noisy,1 -M$module -e 1 --\n";
-        $section .=
-            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module\n";
-        $section .=
-            "\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --\n";
+        $section .= <<"...";
+\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibproxy -e 1 -- $module
+\t\$(ABSPERLRUN) -Iinc -Ilib -Iblib/lib -MInline=Config,directory,$inline_build_path,build_noisy,1 -M$module -e 1 --
+\t\$(ABSPERLRUN) -Iinc -MInline::Module=makeblibdyna -e 1 -- $module
+\t\$(ABSPERLRUN) -Iinc -MInline::Module=fixblib -e 1 --
+...
     }
 
     return $section;
